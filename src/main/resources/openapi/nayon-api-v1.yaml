@@ -1,0 +1,275 @@
+openapi: 3.1.0
+info:
+  title: NYAON API
+  version: 1.0.0
+  description: Social-account-isolated profile and cloud save API.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /me:
+    get:
+      operationId: getMe
+      responses:
+        '200':
+          description: Current player account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: updateMyProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Updated player account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /save:
+    get:
+      operationId: getCloudSave
+      responses:
+        '200':
+          description: Current cloud save
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaveResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: putCloudSave
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveWriteRequest'
+      responses:
+        '200':
+          description: Stored cloud save
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaveResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /save/import:
+    post:
+      operationId: importLocalSave
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveImportRequest'
+      responses:
+        '200':
+          description: Existing result for an identical retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaveResponse'
+        '201':
+          description: Imported local save
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaveResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: UUID generated once for a logical import command.
+      schema:
+        type: string
+        format: uuid
+      example: 6bf5aa51-f26c-42df-bfc4-f52c4cae1356
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Unauthorized:
+      description: Missing or invalid access token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Conflict:
+      description: Revision or idempotency conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+  schemas:
+    MeResponse:
+      type: object
+      additionalProperties: false
+      required: [publicId, status, nickname, createdAt]
+      properties:
+        publicId:
+          type: string
+          maxLength: 32
+          example: NYAON-A1B2C3D4
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, DELETED]
+        nickname:
+          type: string
+          minLength: 1
+          maxLength: 30
+          example: NyaonHunter
+        avatarCode:
+          type: [string, 'null']
+          maxLength: 80
+        frameCode:
+          type: [string, 'null']
+          maxLength: 80
+        locale:
+          type: [string, 'null']
+          maxLength: 16
+          example: ko-KR
+        createdAt:
+          type: string
+          format: date-time
+    UpdateProfileRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        nickname:
+          type: string
+          minLength: 1
+          maxLength: 30
+        avatarCode:
+          type: [string, 'null']
+          maxLength: 80
+        frameCode:
+          type: [string, 'null']
+          maxLength: 80
+    SaveWriteRequest:
+      type: object
+      additionalProperties: false
+      required: [expectedRevision, schemaVersion, payload, checksum, clientBuild]
+      properties:
+        expectedRevision:
+          type: integer
+          format: int64
+          minimum: 0
+          example: 4
+        schemaVersion:
+          type: integer
+          minimum: 1
+          example: 1
+        payload:
+          type: object
+          additionalProperties: true
+        checksum:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        clientBuild:
+          type: string
+          minLength: 1
+          maxLength: 40
+          example: 0.1.0-android
+    SaveImportRequest:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, payload, checksum, clientBuild]
+      properties:
+        schemaVersion:
+          type: integer
+          minimum: 1
+        payload:
+          type: object
+          additionalProperties: true
+        checksum:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        clientBuild:
+          type: string
+          minLength: 1
+          maxLength: 40
+    SaveResponse:
+      type: object
+      additionalProperties: false
+      required: [schemaVersion, revision, payload, checksum, clientBuild, updatedAt]
+      properties:
+        schemaVersion:
+          type: integer
+          minimum: 1
+        revision:
+          type: integer
+          format: int64
+          minimum: 0
+        payload:
+          type: object
+          additionalProperties: true
+        checksum:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        clientBuild:
+          type: string
+          maxLength: 40
+        updatedAt:
+          type: string
+          format: date-time
+    ApiError:
+      type: object
+      additionalProperties: false
+      required: [code, message, traceId, details]
+      properties:
+        code:
+          type: string
+          example: SAVE_REVISION_CONFLICT
+        message:
+          type: string
+          example: The cloud save has changed.
+        traceId:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

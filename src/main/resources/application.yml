@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: nayon-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/nayon}
+    username: ${DB_USERNAME:nayon}
+    password: ${DB_PASSWORD:replace-with-db-password}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${COGNITO_ISSUER_URI:https://cognito-idp.ap-northeast-2.amazonaws.com/replace-with-user-pool-id}
+          jwk-set-uri: ${COGNITO_JWK_SET_URI:https://cognito-idp.ap-northeast-2.amazonaws.com/replace-with-user-pool-id/.well-known/jwks.json}
+
+nayon:
+  auth:
+    client-id: ${COGNITO_CLIENT_ID:replace-with-client-id}
+    provider-claim: nayon:provider
+    subject-claim: sub
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
