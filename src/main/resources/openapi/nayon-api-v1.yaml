@@ -502,6 +502,16 @@ components:
               format: int64
               minimum: 0
               maximum: 1000000000
+            RANDOM_SCROLL:
+              type: integer
+              format: int64
+              minimum: 0
+              maximum: 1000000000
+            LEVEL_UP_COUPON:
+              type: integer
+              format: int64
+              minimum: 0
+              maximum: 1000000000
         equipment:
           type: array
           description: Expanded sum of all quantity values must not exceed 10000.
@@ -709,7 +719,7 @@ components:
     BattleCompletionResponse:
       type: object
       additionalProperties: false
-      required: [battleId, stageCode, outcome, rewardState, gold, accountExp, totalAccountExp, anomalyReasons, economy, completedAt, replay]
+      required: [battleId, stageCode, outcome, rewardState, gold, accountExp, totalAccountExp, randomScroll, levelUpCoupon, anomalyReasons, economy, completedAt, replay]
       properties:
         battleId:
           type: string
@@ -731,6 +741,14 @@ components:
           format: int64
           minimum: 0
         totalAccountExp:
+          type: integer
+          format: int64
+          minimum: 0
+        randomScroll:
+          type: integer
+          format: int64
+          minimum: 0
+        levelUpCoupon:
           type: integer
           format: int64
           minimum: 0

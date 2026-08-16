@@ -14,6 +14,8 @@ public record BattleCompletionResponse(
         long gold,
         long accountExp,
         long totalAccountExp,
+        long randomScroll,
+        long levelUpCoupon,
         List<String> anomalyReasons,
         EconomyResponse economy,
         Instant completedAt,
@@ -22,7 +24,8 @@ public record BattleCompletionResponse(
         return new BattleCompletionResponse(
                 result.battleId(), result.stageCode(), result.outcome().name(),
                 result.rewardState().name(), result.gold(), result.accountExp(),
-                result.totalAccountExp(), result.anomalyReasons(),
+                result.totalAccountExp(), result.randomScroll(),
+                result.levelUpCoupon(), result.anomalyReasons(),
                 EconomyResponse.from(result.economy()), result.completedAt(),
                 result.replay());
     }

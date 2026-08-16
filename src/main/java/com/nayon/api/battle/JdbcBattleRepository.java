@@ -134,7 +134,14 @@ public class JdbcBattleRepository implements BattleRepository {
         long gold = command.outcome() == BattleOutcome.CLEAR
                 ? session.stage().clearGold() : 0;
         long exp = command.outcome() == BattleOutcome.CLEAR
-                ? session.stage().clearExp() : 0;
+                ? 120L + session.stage().stageIndex() * 45L
+                        + Math.max(1L, Math.min(20L,
+                                (command.elapsedSeconds() + 59L) / 60L)) * 18L
+                        + Math.max(0L, Math.min(180L, command.killCount() / 25L))
+                : 0;
+        long randomScroll = command.outcome() == BattleOutcome.CLEAR ? 10 : 0;
+        long levelUpCoupon = command.outcome() == BattleOutcome.CLEAR
+                ? session.stage().stageIndex() : 0;
 
         UUID completionId = UUID.randomUUID();
         jdbc.update("""
@@ -163,15 +170,19 @@ public class JdbcBattleRepository implements BattleRepository {
         jdbc.update("""
                 insert into battle_rewards(
                     id, battle_id, account_id, state, gold, account_exp,
+                    random_scroll, level_up_coupon,
                     decision_details, decided_at, granted_at)
-                values (?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?)
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?)
                 """, UUID.randomUUID(), battleId, accountId, rewardState.name(),
-                gold, exp, write(evaluation.details()), java.sql.Timestamp.from(now),
+                gold, exp, randomScroll, levelUpCoupon,
+                write(evaluation.details()), java.sql.Timestamp.from(now),
                 rewardState == BattleRewardState.GRANTED
                         ? java.sql.Timestamp.from(now) : null);
 
         if (rewardState == BattleRewardState.GRANTED) {
             grantGold(accountId, requestId, battleId, gold);
+            grantItem(accountId, requestId, battleId, "RANDOM_SCROLL", randomScroll);
+            grantItem(accountId, requestId, battleId, "LEVEL_UP_COUPON", levelUpCoupon);
             jdbc.update("""
                     update player_progression
                        set account_exp = account_exp + ?,
@@ -191,7 +202,7 @@ public class JdbcBattleRepository implements BattleRepository {
         EconomySnapshot economy = economyRepository.findSnapshot(accountId);
         BattleCompletionResult result = new BattleCompletionResult(
                 battleId, session.stageCode(), command.outcome(), rewardState,
-                gold, exp, totalExp,
+                gold, exp, totalExp, randomScroll, levelUpCoupon,
                 evaluation.anomalies().stream().map(BattleAnomaly::ruleCode).toList(),
                 economy, now, false);
         jdbc.update("""
@@ -258,6 +269,39 @@ public class JdbcBattleRepository implements BattleRepository {
                             'BATTLE_REWARD', 'BATTLE', ?, ?)
                     """, UUID.randomUUID(), accountId, gold, before, after,
                     battleId, requestId);
+        }
+    }
+
+    private void grantItem(
+            UUID accountId,
+            UUID requestId,
+            UUID battleId,
+            String itemCode,
+            long quantity) {
+        jdbc.update("""
+                insert into player_items(account_id, item_code, quantity)
+                values (?, ?, 0) on conflict do nothing
+                """, accountId, itemCode);
+        long before = jdbc.queryForObject("""
+                select quantity from player_items
+                 where account_id = ? and item_code = ? for update
+                """, Long.class, accountId, itemCode);
+        long after = Math.addExact(before, quantity);
+        jdbc.update("""
+                update player_items set quantity = ?, version = version + 1,
+                       updated_at = now()
+                 where account_id = ? and item_code = ?
+                """, after, accountId, itemCode);
+        if (quantity > 0) {
+            jdbc.update("""
+                    insert into economy_ledger(
+                        id, account_id, asset_type, asset_code, delta,
+                        balance_before, balance_after, reason_code,
+                        reference_type, reference_id, request_id)
+                    values (?, ?, 'ITEM', ?, ?, ?, ?,
+                            'BATTLE_REWARD', 'BATTLE', ?, ?)
+                    """, UUID.randomUUID(), accountId, itemCode, quantity,
+                    before, after, battleId, requestId);
         }
     }
 

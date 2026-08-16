@@ -152,7 +152,7 @@ class BattleContractTest {
                     if (previous != null) return previous.asReplay();
                     BattleCompletionResult result = new BattleCompletionResult(
                             battleId, "STAGE_1", command.outcome(),
-                            BattleRewardState.GRANTED, 1000, 5, 5,
+                            BattleRewardState.GRANTED, 1000, 5, 5, 10, 1,
                             List.of(), new EconomySnapshot(
                                     accountId, Map.of("GOLD", 1000L), Map.of(),
                                     List.of(), true), now, false);

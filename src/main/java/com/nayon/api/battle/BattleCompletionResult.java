@@ -14,6 +14,8 @@ public record BattleCompletionResult(
         long gold,
         long accountExp,
         long totalAccountExp,
+        long randomScroll,
+        long levelUpCoupon,
         List<String> anomalyReasons,
         EconomySnapshot economy,
         Instant completedAt,
@@ -26,6 +28,7 @@ public record BattleCompletionResult(
     public BattleCompletionResult asReplay() {
         return new BattleCompletionResult(
                 battleId, stageCode, outcome, rewardState, gold, accountExp,
-                totalAccountExp, anomalyReasons, economy, completedAt, true);
+                totalAccountExp, randomScroll, levelUpCoupon,
+                anomalyReasons, economy, completedAt, true);
     }
 }

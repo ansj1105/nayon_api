@@ -65,10 +65,13 @@ class BattlePostgresTest {
         assertThat(first.rewardState()).isEqualTo(BattleRewardState.GRANTED);
         assertThat(replay.replay()).isTrue();
         assertThat(first.economy().currencies()).containsEntry("GOLD", 1000L);
-        assertThat(first.totalAccountExp()).isEqualTo(5L);
+        assertThat(first.totalAccountExp()).isEqualTo(187L);
+        assertThat(first.economy().items())
+                .containsEntry("RANDOM_SCROLL", 10L)
+                .containsEntry("LEVEL_UP_COUPON", 1L);
         assertThat(jdbc.queryForObject(
                 "select count(*) from economy_ledger where reference_id = ?",
-                Long.class, session.battleId())).isEqualTo(1L);
+                Long.class, session.battleId())).isEqualTo(3L);
     }
 
     @Test

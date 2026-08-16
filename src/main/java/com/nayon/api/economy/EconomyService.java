@@ -19,7 +19,8 @@ public class EconomyService {
 
     private static final Set<String> CURRENCIES = Set.of("DIAMOND", "GOLD");
     private static final Set<String> ITEMS = Set.of(
-            "SILVER_KEY", "GOLD_KEY", "CHROMA_FRAGMENT");
+            "SILVER_KEY", "GOLD_KEY", "CHROMA_FRAGMENT",
+            "RANDOM_SCROLL", "LEVEL_UP_COUPON");
     private static final Set<String> GRADES = Set.of(
             "COMMON", "UNCOMMON", "RARE", "EPIC", "UNIQUE");
     private static final long MAX_ASSET_VALUE = 1_000_000_000L;
