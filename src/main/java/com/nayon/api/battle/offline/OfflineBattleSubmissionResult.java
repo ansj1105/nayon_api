@@ -12,6 +12,7 @@ public record OfflineBattleSubmissionResult(
         List<UUID> acceptedRunIds,
         List<String> anomalyReasons,
         long accountExp,
+        long totalAccountExp,
         EconomySnapshot economy,
         boolean replay) {
     public OfflineBattleSubmissionResult {
@@ -22,6 +23,6 @@ public record OfflineBattleSubmissionResult(
     public OfflineBattleSubmissionResult asReplay() {
         return new OfflineBattleSubmissionResult(
                 submissionId, rewardState, acceptedRunIds,
-                anomalyReasons, accountExp, economy, true);
+                anomalyReasons, accountExp, totalAccountExp, economy, true);
     }
 }

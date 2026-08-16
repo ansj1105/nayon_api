@@ -973,7 +973,7 @@ components:
     OfflineBattleSubmissionResponse:
       type: object
       additionalProperties: false
-      required: [submissionId, rewardState, acceptedRunIds, anomalyReasons, accountExp, economy, replay]
+      required: [submissionId, rewardState, acceptedRunIds, anomalyReasons, accountExp, totalAccountExp, economy, replay]
       properties:
         submissionId:
           type: string
@@ -991,6 +991,10 @@ components:
           items:
             type: string
         accountExp:
+          type: integer
+          format: int64
+          minimum: 0
+        totalAccountExp:
           type: integer
           format: int64
           minimum: 0

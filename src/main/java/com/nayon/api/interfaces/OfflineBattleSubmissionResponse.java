@@ -12,12 +12,13 @@ public record OfflineBattleSubmissionResponse(
         List<UUID> acceptedRunIds,
         List<String> anomalyReasons,
         long accountExp,
+        long totalAccountExp,
         EconomyResponse economy,
         boolean replay) {
     static OfflineBattleSubmissionResponse from(OfflineBattleSubmissionResult result) {
         return new OfflineBattleSubmissionResponse(
                 result.submissionId(), result.rewardState(), result.acceptedRunIds(),
-                result.anomalyReasons(), result.accountExp(),
+                result.anomalyReasons(), result.accountExp(), result.totalAccountExp(),
                 EconomyResponse.from(result.economy()),
                 result.replay());
     }

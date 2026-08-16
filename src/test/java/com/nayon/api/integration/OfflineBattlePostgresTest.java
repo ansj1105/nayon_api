@@ -79,10 +79,40 @@ class OfflineBattlePostgresTest {
         assertThat(first.anomalyReasons()).contains("OFFLINE_CLEAR_REQUIRES_REVIEW");
         assertThat(replay.submissionId()).isEqualTo(first.submissionId());
         assertThat(replay.replay()).isTrue();
+        assertThat(replay.totalAccountExp()).isEqualTo(first.totalAccountExp());
         assertThat(first.economy().currencies()).containsEntry("GOLD", 0L);
         assertThat(jdbc.queryForObject(
                 "select count(*) from economy_ledger where reference_id = ?",
                 Long.class, first.submissionId())).isZero();
+    }
+
+    @Test
+    void legacyReplayBackfillsCurrentAuthoritativeTotalExperience() {
+        PlayerAccount account = bootstrapped("offline-legacy-replay");
+        OfflineBattleWindowResult window = service.sync(
+                account.id(), UUID.randomUUID());
+        makeElapsedAvailable(account.id());
+        UUID requestId = UUID.randomUUID();
+        OfflineBattleSubmissionCommand command = submission(
+                window.windowId(), UUID.randomUUID());
+        service.submit(account.id(), requestId, command);
+        jdbc.update("""
+                update offline_battle_submissions
+                   set response_payload = response_payload - 'totalAccountExp'
+                 where account_id = ? and request_id = ?
+                """, account.id(), requestId);
+        jdbc.update("update player_progression set account_exp = 321 where account_id = ?",
+                account.id());
+
+        OfflineBattleSubmissionResult replay =
+                service.submit(account.id(), requestId, command);
+
+        assertThat(replay.totalAccountExp()).isEqualTo(321L);
+        assertThat(jdbc.queryForObject("""
+                select jsonb_exists(response_payload, 'totalAccountExp')
+                  from offline_battle_submissions
+                 where account_id = ? and request_id = ?
+                """, Boolean.class, account.id(), requestId)).isTrue();
     }
 
     @Test

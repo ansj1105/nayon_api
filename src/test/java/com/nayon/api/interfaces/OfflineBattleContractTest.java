@@ -74,6 +74,7 @@ class OfflineBattleContractTest {
                 .andExpect(jsonPath("$.rewardState").value("GRANTED"))
                 .andExpect(jsonPath("$.acceptedRunIds[0]").value(
                         "00000000-0000-0000-0000-000000000101"))
+                .andExpect(jsonPath("$.totalAccountExp").value(487))
                 .andExpect(jsonPath("$.replay").value(false));
     }
 
@@ -128,7 +129,7 @@ class OfflineBattleContractTest {
                     return new OfflineBattleSubmissionResult(
                             UUID.randomUUID(), BattleRewardState.GRANTED,
                             command.runs().stream().map(run -> run.runId()).toList(),
-                            List.of(), 187L, new EconomySnapshot(
+                            List.of(), 187L, 487L, new EconomySnapshot(
                                     accountId, Map.of("GOLD", 1000L), Map.of(),
                                     List.of(), true), false);
                 }

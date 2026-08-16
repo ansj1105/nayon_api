@@ -112,17 +112,35 @@ public class JdbcOfflineBattleRepository implements OfflineBattleRepository {
                 select request_hash, response_payload
                   from offline_battle_submissions
                  where account_id = ? and request_id = ?
-                """, (rs, row) -> new StoredSubmission(
-                rs.getString("request_hash"), read(
-                        rs.getString("response_payload"),
-                        OfflineBattleSubmissionResult.class)),
+                """, (rs, row) -> {
+                    String payload = rs.getString("response_payload");
+                    return new StoredSubmission(
+                            rs.getString("request_hash"),
+                            read(payload, OfflineBattleSubmissionResult.class),
+                            payload);
+                },
                 accountId, requestId);
         if (!existing.isEmpty()) {
             StoredSubmission stored = existing.getFirst();
             if (!stored.requestHash().equals(requestHash)) {
                 throw new OfflineBattleConflictException("Idempotency key was reused");
             }
-            return stored.result().asReplay();
+            OfflineBattleSubmissionResult result = stored.result();
+            if (!hasJsonField(stored.responsePayload(), "totalAccountExp")) {
+                long currentTotal = jdbc.queryForObject("""
+                        select account_exp from player_progression where account_id = ?
+                        """, Long.class, accountId);
+                result = new OfflineBattleSubmissionResult(
+                        result.submissionId(), result.rewardState(),
+                        result.acceptedRunIds(), result.anomalyReasons(),
+                        result.accountExp(), currentTotal, result.economy(), false);
+                jdbc.update("""
+                        update offline_battle_submissions
+                           set response_payload = ?::jsonb
+                         where account_id = ? and request_id = ?
+                        """, write(result), accountId, requestId);
+            }
+            return result.asReplay();
         }
         requireBootstrapped(accountId);
 
@@ -251,10 +269,13 @@ public class JdbcOfflineBattleRepository implements OfflineBattleRepository {
                 """, requestedSeconds, timestamp(now), accountId);
 
         EconomySnapshot economy = economyRepository.findSnapshot(accountId);
+        long totalAccountExp = jdbc.queryForObject("""
+                select account_exp from player_progression where account_id = ?
+                """, Long.class, accountId);
         OfflineBattleSubmissionResult result = new OfflineBattleSubmissionResult(
                 submissionId, state,
                 command.runs().stream().map(OfflineBattleRunCommand::runId).toList(),
-                anomalies, totalExp, economy, false);
+                anomalies, totalExp, totalAccountExp, economy, false);
         jdbc.update("update offline_battle_submissions set response_payload = ?::jsonb where id = ?",
                 write(result), submissionId);
         return result;
@@ -341,7 +362,17 @@ public class JdbcOfflineBattleRepository implements OfflineBattleRepository {
         }
     }
 
+    private boolean hasJsonField(String json, String field) {
+        try {
+            return objectMapper.readTree(json).has(field);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Stored offline battle data is invalid", exception);
+        }
+    }
+
     private record StoredWindow(String requestHash, OfflineBattleWindowResult result) {}
     private record StoredSubmission(
-            String requestHash, OfflineBattleSubmissionResult result) {}
+            String requestHash,
+            OfflineBattleSubmissionResult result,
+            String responsePayload) {}
 }
