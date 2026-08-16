@@ -66,6 +66,7 @@ services:
     mem_limit: 512m
     networks:
       - nayon-internal
+      - nayon-ingress
 
 volumes:
   nayon_postgres_data:
@@ -73,3 +74,4 @@ volumes:
 networks:
   nayon-internal:
     internal: true
+  nayon-ingress:

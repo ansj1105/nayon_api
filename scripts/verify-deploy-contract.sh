@@ -12,7 +12,14 @@ bash -n "$deploy_script"
 
 grep -Fq '127.0.0.1:3200:8080' "$compose_file"
 grep -Fq '../nayon_cloud' "$compose_file"
-if grep -A20 '^  postgres:' "$compose_file" | grep -Eq '^[[:space:]]+ports:'; then
+api_block="$(sed -n '/^  api:/,/^volumes:/p' "$compose_file")"
+postgres_block="$(sed -n '/^  postgres:/,/^  flyway:/p' "$compose_file")"
+grep -Fq '      - nayon-ingress' <<<"$api_block"
+if grep -Fq '      - nayon-ingress' <<<"$postgres_block"; then
+  echo "postgres must not join the ingress network" >&2
+  exit 1
+fi
+if grep -Eq '^[[:space:]]+ports:' <<<"$postgres_block"; then
   echo "postgres must not publish a host port" >&2
   exit 1
 fi
