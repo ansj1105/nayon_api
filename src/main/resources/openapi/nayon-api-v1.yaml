@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: NYAON API
-  version: 1.1.0
-  description: Social-account-isolated profile, cloud save, and game economy API.
+  version: 1.2.0
+  description: Social-account-isolated profile, cloud save, economy, and server gacha API.
 servers:
   - url: /api/v1
 security:
@@ -146,6 +146,65 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           $ref: '#/components/responses/Conflict'
+  /gacha/draws:
+    post:
+      operationId: createGachaDraw
+      description: Atomically debits payment, resolves server RNG and pity, grants equipment, and stores history.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GachaDrawRequest'
+      responses:
+        '200':
+          description: Existing result for an identical retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GachaDrawResponse'
+        '201':
+          description: Completed server-authoritative draw
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GachaDrawResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    get:
+      operationId: listGachaDraws
+      parameters:
+        - name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Account-isolated newest-first gacha history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GachaHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 components:
   securitySchemes:
     bearerAuth:
@@ -401,6 +460,87 @@ components:
           minimum: 1
         locked:
           type: boolean
+    GachaDrawRequest:
+      type: object
+      additionalProperties: false
+      required: [banner, payment, count]
+      properties:
+        banner:
+          type: string
+          enum: [COMMON, ADVANCED, CHROMA_SEASON_01]
+        payment:
+          type: string
+          enum: [SILVER_KEY, GOLD_KEY, CHROMA_FRAGMENT, DIAMOND]
+        count:
+          type: integer
+          minimum: 1
+          maximum: 10
+      description: Supported combinations are COMMON/SILVER_KEY/1, ADVANCED/GOLD_KEY/1, CHROMA_SEASON_01/CHROMA_FRAGMENT/1, and CHROMA_SEASON_01/DIAMOND/10.
+    GachaAward:
+      type: object
+      additionalProperties: false
+      required: [equipmentId, equipmentCode, grade, chroma]
+      properties:
+        equipmentId:
+          type: string
+          format: uuid
+        equipmentCode:
+          type: string
+          maxLength: 80
+        grade:
+          type: string
+          enum: [COMMON, UNCOMMON, RARE, EPIC, UNIQUE]
+        chroma:
+          type: boolean
+    GachaDrawResponse:
+      type: object
+      additionalProperties: false
+      required: [drawId, banner, payment, paymentAmount, results, heroPity, legendaryPity, economy, createdAt, replay]
+      properties:
+        drawId:
+          type: string
+          format: uuid
+        banner:
+          type: string
+          enum: [COMMON, ADVANCED, CHROMA_SEASON_01]
+        payment:
+          type: string
+          enum: [SILVER_KEY, GOLD_KEY, CHROMA_FRAGMENT, DIAMOND]
+        paymentAmount:
+          type: integer
+          format: int64
+          minimum: 1
+        results:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/GachaAward'
+        heroPity:
+          type: integer
+          minimum: 0
+        legendaryPity:
+          type: integer
+          minimum: 0
+        economy:
+          $ref: '#/components/schemas/EconomyResponse'
+        createdAt:
+          type: string
+          format: date-time
+        replay:
+          type: boolean
+    GachaHistoryResponse:
+      type: object
+      additionalProperties: false
+      required: [draws]
+      properties:
+        draws:
+          type: array
+          items:
+            $ref: '#/components/schemas/GachaDrawResponse'
+        nextCursor:
+          type: [string, 'null']
+          format: uuid
     ApiError:
       type: object
       additionalProperties: false

@@ -2,6 +2,9 @@ package com.nayon.api.interfaces;
 
 import com.nayon.api.auth.InvalidIdentityClaimException;
 import com.nayon.api.economy.EconomyBootstrapConflictException;
+import com.nayon.api.gacha.EconomyNotBootstrappedException;
+import com.nayon.api.gacha.GachaConflictException;
+import com.nayon.api.gacha.InsufficientAssetException;
 import com.nayon.api.save.IdempotencyConflictException;
 import com.nayon.api.save.SaveNotFoundException;
 import com.nayon.api.save.SaveRevisionConflictException;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import jakarta.validation.ConstraintViolationException;
 
 import java.util.Map;
 import java.util.UUID;
@@ -38,6 +42,22 @@ public class ApiExceptionHandler {
                 exception.getMessage());
     }
 
+    @ExceptionHandler(GachaConflictException.class)
+    ResponseEntity<ApiError> gachaConflict(GachaConflictException exception) {
+        return error(HttpStatus.CONFLICT, "IDEMPOTENCY_KEY_REUSED", exception.getMessage());
+    }
+
+    @ExceptionHandler(InsufficientAssetException.class)
+    ResponseEntity<ApiError> insufficientAsset(InsufficientAssetException exception) {
+        return error(HttpStatus.CONFLICT, "INSUFFICIENT_ASSET", exception.getMessage());
+    }
+
+    @ExceptionHandler(EconomyNotBootstrappedException.class)
+    ResponseEntity<ApiError> economyNotBootstrapped(
+            EconomyNotBootstrappedException exception) {
+        return error(HttpStatus.CONFLICT, "ECONOMY_NOT_BOOTSTRAPPED", exception.getMessage());
+    }
+
     @ExceptionHandler(SaveNotFoundException.class)
     ResponseEntity<ApiError> saveNotFound(SaveNotFoundException exception) {
         return error(HttpStatus.NOT_FOUND, "SAVE_NOT_FOUND", exception.getMessage());
@@ -52,6 +72,7 @@ public class ApiExceptionHandler {
             MethodArgumentNotValidException.class,
             MissingRequestHeaderException.class,
             HttpMessageNotReadableException.class,
+            ConstraintViolationException.class,
             IllegalArgumentException.class
     })
     ResponseEntity<ApiError> invalidRequest(Exception exception) {

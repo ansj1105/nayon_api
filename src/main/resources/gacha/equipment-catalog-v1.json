@@ -1,0 +1,1559 @@
+{
+  "version": "unity-equipment-2026-08-16",
+  "equipment": [
+    {
+      "code": "E41000",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41001",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41002",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41003",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41003_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41010",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41011",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41012",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41013",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41013_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41020",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41021",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41022",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41023",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41023_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41030",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41031",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41032",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41033",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41033_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41040",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41041",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41042",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41043",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41043_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41050",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41051",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41052",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41053",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41053_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41060",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41061",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41062",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41063",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41063_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41070",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41071",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41072",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41073",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41073_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41080",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41081",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41082",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41083",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41083_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41090",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41091",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41092",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41093",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41093_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41100",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41101",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41102",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41103",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41103_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41110",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41111",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41112",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41113",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41113_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41120",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41121",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41122",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41123",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41123_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E41130",
+      "type": 1,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41131",
+      "type": 1,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E41132",
+      "type": 1,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E41133",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E41133_L0",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E42000",
+      "type": 2,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42001",
+      "type": 2,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42002",
+      "type": 2,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E42003",
+      "type": 2,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E42003_L0",
+      "type": 2,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E42010",
+      "type": 2,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42011",
+      "type": 2,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42012",
+      "type": 2,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E42013",
+      "type": 2,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E42013_L0",
+      "type": 2,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E42020",
+      "type": 2,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42021",
+      "type": 2,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42022",
+      "type": 2,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E42023",
+      "type": 2,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E42023_L0",
+      "type": 2,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E42030",
+      "type": 2,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42031",
+      "type": 2,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42032",
+      "type": 2,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E42033",
+      "type": 2,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E42033_L0",
+      "type": 2,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E42040",
+      "type": 2,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42041",
+      "type": 2,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42042",
+      "type": 2,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E42043",
+      "type": 2,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E42043_L0",
+      "type": 2,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E42050",
+      "type": 2,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42051",
+      "type": 2,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42052",
+      "type": 2,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E42053",
+      "type": 2,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E42053_L0",
+      "type": 2,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E42060",
+      "type": 2,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42061",
+      "type": 2,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E42062",
+      "type": 2,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E42063",
+      "type": 2,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E42063_L0",
+      "type": 2,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E43000",
+      "type": 3,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43001",
+      "type": 3,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43002",
+      "type": 3,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E43003",
+      "type": 3,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E43003_L0",
+      "type": 3,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E43010",
+      "type": 3,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43011",
+      "type": 3,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43012",
+      "type": 3,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E43013",
+      "type": 3,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E43013_L0",
+      "type": 3,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E43020",
+      "type": 3,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43021",
+      "type": 3,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43022",
+      "type": 3,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E43023",
+      "type": 3,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E43023_L0",
+      "type": 3,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E43030",
+      "type": 3,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43031",
+      "type": 3,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43032",
+      "type": 3,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E43033",
+      "type": 3,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E43033_L0",
+      "type": 3,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E43040",
+      "type": 3,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43041",
+      "type": 3,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43042",
+      "type": 3,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E43043",
+      "type": 3,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E43043_L0",
+      "type": 3,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E43050",
+      "type": 3,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43051",
+      "type": 3,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43052",
+      "type": 3,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E43053",
+      "type": 3,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E43053_L0",
+      "type": 3,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E43060",
+      "type": 3,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43061",
+      "type": 3,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E43062",
+      "type": 3,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E43063",
+      "type": 3,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E43063_L0",
+      "type": 3,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E44000",
+      "type": 4,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44001",
+      "type": 4,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44002",
+      "type": 4,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E44003",
+      "type": 4,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E44003_L0",
+      "type": 4,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E44010",
+      "type": 4,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44011",
+      "type": 4,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44012",
+      "type": 4,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E44013",
+      "type": 4,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E44013_L0",
+      "type": 4,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E44020",
+      "type": 4,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44021",
+      "type": 4,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44022",
+      "type": 4,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E44023",
+      "type": 4,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E44023_L0",
+      "type": 4,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E44030",
+      "type": 4,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44031",
+      "type": 4,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44032",
+      "type": 4,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E44033",
+      "type": 4,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E44033_L0",
+      "type": 4,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E44040",
+      "type": 4,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44041",
+      "type": 4,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44042",
+      "type": 4,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E44043",
+      "type": 4,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E44043_L0",
+      "type": 4,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E44050",
+      "type": 4,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44051",
+      "type": 4,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44052",
+      "type": 4,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E44053",
+      "type": 4,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E44053_L0",
+      "type": 4,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E44060",
+      "type": 4,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44061",
+      "type": 4,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E44062",
+      "type": 4,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E44063",
+      "type": 4,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E44063_L0",
+      "type": 4,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E45000",
+      "type": 5,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45001",
+      "type": 5,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45002",
+      "type": 5,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E45003",
+      "type": 5,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E45003_L0",
+      "type": 5,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E45010",
+      "type": 5,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45011",
+      "type": 5,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45012",
+      "type": 5,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E45013",
+      "type": 5,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E45013_L0",
+      "type": 5,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E45020",
+      "type": 5,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45021",
+      "type": 5,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45022",
+      "type": 5,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E45023",
+      "type": 5,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E45023_L0",
+      "type": 5,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E45030",
+      "type": 5,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45031",
+      "type": 5,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45032",
+      "type": 5,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E45033",
+      "type": 5,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E45033_L0",
+      "type": 5,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E45040",
+      "type": 5,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45041",
+      "type": 5,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45042",
+      "type": 5,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E45043",
+      "type": 5,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E45043_L0",
+      "type": 5,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E45050",
+      "type": 5,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45051",
+      "type": 5,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45052",
+      "type": 5,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E45053",
+      "type": 5,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E45053_L0",
+      "type": 5,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E45060",
+      "type": 5,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45061",
+      "type": 5,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E45062",
+      "type": 5,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E45063",
+      "type": 5,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E45063_L0",
+      "type": 5,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E46000",
+      "type": 6,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46001",
+      "type": 6,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46002",
+      "type": 6,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E46003",
+      "type": 6,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E46003_L0",
+      "type": 6,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E46010",
+      "type": 6,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46011",
+      "type": 6,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46012",
+      "type": 6,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E46013",
+      "type": 6,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E46013_L0",
+      "type": 6,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E46020",
+      "type": 6,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46021",
+      "type": 6,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46022",
+      "type": 6,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E46023",
+      "type": 6,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E46023_L0",
+      "type": 6,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E46030",
+      "type": 6,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46031",
+      "type": 6,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46032",
+      "type": 6,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E46033",
+      "type": 6,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E46033_L0",
+      "type": 6,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E46040",
+      "type": 6,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46041",
+      "type": 6,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46042",
+      "type": 6,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E46043",
+      "type": 6,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E46043_L0",
+      "type": 6,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E46050",
+      "type": 6,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46051",
+      "type": 6,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46052",
+      "type": 6,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E46053",
+      "type": 6,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E46053_L0",
+      "type": 6,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "E46060",
+      "type": 6,
+      "grade": "COMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46061",
+      "type": 6,
+      "grade": "UNCOMMON",
+      "chroma": false
+    },
+    {
+      "code": "E46062",
+      "type": 6,
+      "grade": "RARE",
+      "chroma": false
+    },
+    {
+      "code": "E46063",
+      "type": 6,
+      "grade": "EPIC",
+      "chroma": false
+    },
+    {
+      "code": "E46063_L0",
+      "type": 6,
+      "grade": "UNIQUE",
+      "chroma": false
+    },
+    {
+      "code": "S01_W01_E",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": true
+    },
+    {
+      "code": "S01_W01_L",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": true
+    },
+    {
+      "code": "S01_W02_E",
+      "type": 1,
+      "grade": "EPIC",
+      "chroma": true
+    },
+    {
+      "code": "S01_W02_L",
+      "type": 1,
+      "grade": "UNIQUE",
+      "chroma": true
+    },
+    {
+      "code": "S01_G01_E",
+      "type": 2,
+      "grade": "EPIC",
+      "chroma": true
+    },
+    {
+      "code": "S01_G01_L",
+      "type": 2,
+      "grade": "UNIQUE",
+      "chroma": true
+    },
+    {
+      "code": "S01_A01_E",
+      "type": 3,
+      "grade": "EPIC",
+      "chroma": true
+    },
+    {
+      "code": "S01_A01_L",
+      "type": 3,
+      "grade": "UNIQUE",
+      "chroma": true
+    },
+    {
+      "code": "S01_H01_E",
+      "type": 4,
+      "grade": "EPIC",
+      "chroma": true
+    },
+    {
+      "code": "S01_H01_L",
+      "type": 4,
+      "grade": "UNIQUE",
+      "chroma": true
+    },
+    {
+      "code": "S01_R01_E",
+      "type": 5,
+      "grade": "EPIC",
+      "chroma": true
+    },
+    {
+      "code": "S01_R01_L",
+      "type": 5,
+      "grade": "UNIQUE",
+      "chroma": true
+    },
+    {
+      "code": "S01_B01_E",
+      "type": 6,
+      "grade": "EPIC",
+      "chroma": true
+    },
+    {
+      "code": "S01_B01_L",
+      "type": 6,
+      "grade": "UNIQUE",
+      "chroma": true
+    }
+  ]
+}

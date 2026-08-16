@@ -41,7 +41,8 @@ class EconomyPostgresTest {
 
     @BeforeEach
     void cleanDatabase() {
-        jdbc.execute("truncate table economy_bootstraps, economy_ledger, "
+        jdbc.execute("truncate table gacha_draw_results, gacha_draws, gacha_pity_states, "
+                + "economy_bootstraps, economy_ledger, "
                 + "player_equipment, player_items, player_wallets, "
                 + "save_imports, player_save_states, auth_identities, player_accounts");
     }
