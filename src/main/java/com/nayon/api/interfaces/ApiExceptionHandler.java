@@ -1,6 +1,7 @@
 package com.nayon.api.interfaces;
 
 import com.nayon.api.auth.InvalidIdentityClaimException;
+import com.nayon.api.economy.EconomyBootstrapConflictException;
 import com.nayon.api.save.IdempotencyConflictException;
 import com.nayon.api.save.SaveNotFoundException;
 import com.nayon.api.save.SaveRevisionConflictException;
@@ -26,6 +27,15 @@ public class ApiExceptionHandler {
     @ExceptionHandler(IdempotencyConflictException.class)
     ResponseEntity<ApiError> idempotencyConflict(IdempotencyConflictException exception) {
         return error(HttpStatus.CONFLICT, "IDEMPOTENCY_KEY_REUSED", exception.getMessage());
+    }
+
+    @ExceptionHandler(EconomyBootstrapConflictException.class)
+    ResponseEntity<ApiError> economyBootstrapConflict(
+            EconomyBootstrapConflictException exception) {
+        return error(
+                HttpStatus.CONFLICT,
+                "ECONOMY_ALREADY_BOOTSTRAPPED",
+                exception.getMessage());
     }
 
     @ExceptionHandler(SaveNotFoundException.class)

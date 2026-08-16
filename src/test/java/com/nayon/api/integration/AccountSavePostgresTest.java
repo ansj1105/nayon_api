@@ -42,8 +42,9 @@ class AccountSavePostgresTest {
 
     @BeforeEach
     void cleanDatabase() {
-        jdbc.execute("truncate table save_imports, player_save_states, "
-                + "auth_identities, player_accounts");
+        jdbc.execute("truncate table economy_bootstraps, economy_ledger, "
+                + "player_equipment, player_items, player_wallets, "
+                + "save_imports, player_save_states, auth_identities, player_accounts");
     }
 
     @Test

@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: NYAON API
-  version: 1.0.0
-  description: Social-account-isolated profile and cloud save API.
+  version: 1.1.0
+  description: Social-account-isolated profile, cloud save, and game economy API.
 servers:
   - url: /api/v1
 security:
@@ -104,6 +104,48 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           $ref: '#/components/responses/Conflict'
+  /economy:
+    get:
+      operationId: getEconomy
+      responses:
+        '200':
+          description: Current authoritative economy state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EconomyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /economy/bootstrap:
+    post:
+      operationId: bootstrapEconomy
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EconomyBootstrapRequest'
+      responses:
+        '200':
+          description: Existing result for an identical retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EconomyResponse'
+        '201':
+          description: Economy bootstrapped from the existing local account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EconomyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
 components:
   securitySchemes:
     bearerAuth:
@@ -115,7 +157,7 @@ components:
       name: Idempotency-Key
       in: header
       required: true
-      description: UUID generated once for a logical import command.
+      description: UUID generated once for a logical write command.
       schema:
         type: string
         format: uuid
@@ -257,6 +299,108 @@ components:
         updatedAt:
           type: string
           format: date-time
+    EconomyBootstrapRequest:
+      type: object
+      additionalProperties: false
+      required: [currencies, items, equipment]
+      properties:
+        currencies:
+          type: object
+          additionalProperties: false
+          properties:
+            DIAMOND:
+              type: integer
+              format: int64
+              minimum: 0
+              maximum: 1000000000
+            GOLD:
+              type: integer
+              format: int64
+              minimum: 0
+              maximum: 1000000000
+        items:
+          type: object
+          additionalProperties: false
+          properties:
+            SILVER_KEY:
+              type: integer
+              format: int64
+              minimum: 0
+              maximum: 1000000000
+            GOLD_KEY:
+              type: integer
+              format: int64
+              minimum: 0
+              maximum: 1000000000
+            CHROMA_FRAGMENT:
+              type: integer
+              format: int64
+              minimum: 0
+              maximum: 1000000000
+        equipment:
+          type: array
+          description: Expanded sum of all quantity values must not exceed 10000.
+          maxItems: 10000
+          items:
+            $ref: '#/components/schemas/EconomyBootstrapEquipment'
+    EconomyBootstrapEquipment:
+      type: object
+      additionalProperties: false
+      required: [equipmentCode, grade, quantity]
+      properties:
+        equipmentCode:
+          type: string
+          minLength: 1
+          maxLength: 80
+        grade:
+          type: string
+          enum: [COMMON, UNCOMMON, RARE, EPIC, UNIQUE]
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 10000
+    EconomyResponse:
+      type: object
+      additionalProperties: false
+      required: [bootstrapped, currencies, items, equipment]
+      properties:
+        bootstrapped:
+          type: boolean
+        currencies:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+            minimum: 0
+        items:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+            minimum: 0
+        equipment:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerEquipment'
+    PlayerEquipment:
+      type: object
+      additionalProperties: false
+      required: [id, equipmentCode, grade, level, locked]
+      properties:
+        id:
+          type: string
+          format: uuid
+        equipmentCode:
+          type: string
+          maxLength: 80
+        grade:
+          type: string
+          enum: [COMMON, UNCOMMON, RARE, EPIC, UNIQUE]
+        level:
+          type: integer
+          minimum: 1
+        locked:
+          type: boolean
     ApiError:
       type: object
       additionalProperties: false

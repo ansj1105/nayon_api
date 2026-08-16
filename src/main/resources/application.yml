@@ -1,6 +1,9 @@
 spring:
   application:
     name: nayon-api
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/nayon}
     username: ${DB_USERNAME:nayon}

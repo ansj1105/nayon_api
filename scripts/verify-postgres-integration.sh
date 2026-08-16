@@ -26,6 +26,10 @@ trap cleanup EXIT
   -v ON_ERROR_STOP=1 \
   -f "$cloud_dir/db/migration/V1__create_player_account_and_save.sql" >/dev/null
 
+"$pg_bin/psql" -h 127.0.0.1 -p "$port" -U postgres -d postgres \
+  -v ON_ERROR_STOP=1 \
+  -f "$cloud_dir/db/migration/V2__create_player_economy.sql" >/dev/null
+
 cd "$repo_dir"
 env \
   E2E_DB=1 \
@@ -33,4 +37,4 @@ env \
   DB_USERNAME=postgres \
   DB_PASSWORD=test-only-password \
   GRADLE_USER_HOME="$gradle_home" \
-  ./gradlew test --tests '*AccountSavePostgresTest' --console=plain --no-daemon
+  ./gradlew test --tests '*PostgresTest' --console=plain --no-daemon
