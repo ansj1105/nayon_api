@@ -15,6 +15,7 @@ grep -Fq '127.0.0.1:3200:8080' "$compose_file"
 grep -Fq 'KORION_WALLET_LINK_BASE_URL: ${KORION_WALLET_LINK_BASE_URL}' "$compose_file"
 grep -Fq 'KORION_WALLET_LINK_INTERNAL_API_KEY: ${KORION_WALLET_LINK_INTERNAL_API_KEY}' "$compose_file"
 grep -Fq 'name: coin-shared' "$compose_file"
+test "$(grep -Fc 'jdbc:postgresql://nayon-postgres:5432/${DB_NAME}' "$compose_file")" -eq 2
 grep -Fq '../nayon_cloud' "$compose_file"
 api_block="$(sed -n '/^  api:/,/^volumes:/p' "$compose_file")"
 postgres_block="$(sed -n '/^  postgres:/,/^  flyway:/p' "$compose_file")"
