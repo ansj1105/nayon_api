@@ -17,7 +17,7 @@ fi
 
 image_tag="$(git -C "$repo_root" rev-parse --short=12 HEAD)"
 migration_tag="$(git -C "$cloud_root" rev-parse --short=12 HEAD)"
-compose=(sudo docker compose --env-file "$env_file" -f "$compose_file")
+compose=(sudo --preserve-env=IMAGE_TAG,MIGRATION_TAG docker compose --env-file "$env_file" -f "$compose_file")
 
 export IMAGE_TAG="$image_tag"
 export MIGRATION_TAG="$migration_tag"

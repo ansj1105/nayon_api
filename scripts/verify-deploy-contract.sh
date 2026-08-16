@@ -9,6 +9,7 @@ test -f "$repo_root/Dockerfile"
 test -f "$compose_file"
 test -f "$deploy_script"
 bash -n "$deploy_script"
+grep -Fq -- '--preserve-env=IMAGE_TAG,MIGRATION_TAG' "$deploy_script"
 
 grep -Fq '127.0.0.1:3200:8080' "$compose_file"
 grep -Fq '../nayon_cloud' "$compose_file"
