@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class IdentityExtractorTest {
 
     private final IdentityExtractor extractor =
-            new IdentityExtractor("nayon:provider", "sub");
+            new IdentityExtractor("nayon:provider", "sub", "");
 
     @Test
     void extractsGoogleIdentityFromTrustedClaims() {
@@ -43,6 +43,23 @@ class IdentityExtractorTest {
         assertThatThrownBy(() -> extractor.extract(jwt))
                 .isInstanceOf(InvalidIdentityClaimException.class)
                 .hasMessageContaining("nayon:provider");
+    }
+
+    @Test
+    void usesProviderBoundToTheValidatedCognitoClient() {
+        IdentityExtractor googleExtractor =
+                new IdentityExtractor("nayon:provider", "sub", "GOOGLE");
+        Jwt jwt = Jwt.withTokenValue("token")
+                .header("alg", "none")
+                .subject("google-subject-a")
+                .issuedAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(300))
+                .build();
+
+        AuthenticatedIdentity identity = googleExtractor.extract(jwt);
+
+        assertThat(identity.provider()).isEqualTo(AuthProvider.GOOGLE);
+        assertThat(identity.subject()).isEqualTo("google-subject-a");
     }
 
     @Test

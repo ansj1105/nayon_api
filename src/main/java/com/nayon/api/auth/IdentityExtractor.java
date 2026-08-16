@@ -11,16 +11,26 @@ public class IdentityExtractor {
 
     private final String providerClaim;
     private final String subjectClaim;
+    private final String configuredProvider;
 
     public IdentityExtractor(
             @Value("${nayon.auth.provider-claim:nayon:provider}") String providerClaim,
-            @Value("${nayon.auth.subject-claim:sub}") String subjectClaim) {
+            @Value("${nayon.auth.subject-claim:sub}") String subjectClaim,
+            @Value("${nayon.auth.provider:}") String configuredProvider) {
         this.providerClaim = providerClaim;
         this.subjectClaim = subjectClaim;
+        this.configuredProvider = configuredProvider;
     }
 
     public AuthenticatedIdentity extract(Jwt jwt) {
-        String providerValue = requiredClaim(jwt, providerClaim);
+        String providerValue = jwt.getClaimAsString(providerClaim);
+        if (providerValue == null || providerValue.isBlank()) {
+            providerValue = configuredProvider;
+        }
+        if (providerValue == null || providerValue.isBlank()) {
+            throw new InvalidIdentityClaimException(
+                    "Required identity claim is missing: " + providerClaim);
+        }
         String subject = requiredClaim(jwt, subjectClaim);
 
         try {

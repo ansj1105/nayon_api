@@ -15,6 +15,7 @@ spring:
 nayon:
   auth:
     client-id: ${COGNITO_CLIENT_ID:replace-with-client-id}
+    provider: ${NAYON_AUTH_PROVIDER:}
     provider-claim: nayon:provider
     subject-claim: sub
 

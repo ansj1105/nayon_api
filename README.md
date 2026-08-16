@@ -8,11 +8,10 @@ Spring Boot API for NYAON HUNTERS social accounts and cloud saves.
 - PostgreSQL 16 with `nayon_cloud` migrations applied
 - Cognito access tokens containing:
   - `sub`: stable Cognito subject
-  - `nayon:provider`: trusted `GOOGLE` or `APPLE` claim
   - `token_use=access`
   - `client_id`: configured Unity app client ID
 
-The API does not infer the provider from email or username. Configure Cognito token customization to emit `nayon:provider`; tokens without it are rejected.
+Set `NAYON_AUTH_PROVIDER=GOOGLE` for the dedicated Google Cognito app client. The API accepts a trusted `nayon:provider` token claim when present and otherwise uses this app-client-bound provider setting. It never infers the provider from email or username.
 
 ## Configuration
 
