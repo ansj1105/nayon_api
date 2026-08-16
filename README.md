@@ -38,5 +38,7 @@ The source contract is `src/main/resources/openapi/nayon-api-v1.yaml`.
 - `GET /api/v1/save`
 - `PUT /api/v1/save`
 - `POST /api/v1/save/import`
+- `POST /api/v1/offline-battles/sync`
+- `POST /api/v1/offline-battles`
 
 All game endpoints require a Cognito Bearer access token. `GET /actuator/health` and `GET /actuator/info` are public.

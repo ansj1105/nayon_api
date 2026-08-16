@@ -4,6 +4,7 @@ import com.nayon.api.auth.InvalidIdentityClaimException;
 import com.nayon.api.battle.BattleConflictException;
 import com.nayon.api.battle.BattleEconomyNotBootstrappedException;
 import com.nayon.api.battle.BattleNotFoundException;
+import com.nayon.api.battle.offline.OfflineBattleConflictException;
 import com.nayon.api.economy.EconomyBootstrapConflictException;
 import com.nayon.api.gacha.EconomyNotBootstrappedException;
 import com.nayon.api.gacha.GachaConflictException;
@@ -54,6 +55,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(BattleConflictException.class)
     ResponseEntity<ApiError> battleConflict(BattleConflictException exception) {
         return error(HttpStatus.CONFLICT, "BATTLE_CONFLICT", exception.getMessage());
+    }
+
+    @ExceptionHandler(OfflineBattleConflictException.class)
+    ResponseEntity<ApiError> offlineBattleConflict(
+            OfflineBattleConflictException exception) {
+        return error(HttpStatus.CONFLICT, "OFFLINE_BATTLE_CONFLICT", exception.getMessage());
     }
 
     @ExceptionHandler(BattleEconomyNotBootstrappedException.class)

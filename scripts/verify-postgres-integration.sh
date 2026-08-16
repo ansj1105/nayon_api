@@ -38,6 +38,10 @@ trap cleanup EXIT
   -v ON_ERROR_STOP=1 \
   -f "$cloud_dir/db/migration/V4__create_battle_records.sql" >/dev/null
 
+"$pg_bin/psql" -h 127.0.0.1 -p "$port" -U postgres -d postgres \
+  -v ON_ERROR_STOP=1 \
+  -f "$cloud_dir/db/migration/V5__create_offline_battle_submissions.sql" >/dev/null
+
 cd "$repo_dir"
 env \
   E2E_DB=1 \
@@ -45,4 +49,4 @@ env \
   DB_USERNAME=postgres \
   DB_PASSWORD=test-only-password \
   GRADLE_USER_HOME="$gradle_home" \
-  ./gradlew test --tests '*PostgresTest' --console=plain --no-daemon
+  ./gradlew cleanTest test --tests '*PostgresTest' --console=plain --no-daemon

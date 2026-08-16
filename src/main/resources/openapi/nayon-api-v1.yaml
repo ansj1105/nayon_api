@@ -266,6 +266,62 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /offline-battles/sync:
+    post:
+      operationId: syncOfflineBattleWindow
+      description: Replaces the account's offline play window using server timestamps only.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Existing window for an identical retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineBattleWindowResponse'
+        '201':
+          description: Server-timed offline play window
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineBattleWindowResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /offline-battles:
+    post:
+      operationId: submitOfflineBattles
+      description: Consumes server-issued elapsed-time budget and atomically decides pending run rewards.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfflineBattleSubmissionRequest'
+      responses:
+        '200':
+          description: Existing decision for an identical retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineBattleSubmissionResponse'
+        '201':
+          description: Durable offline battle decision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfflineBattleSubmissionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /battles/{battleId}/complete:
     post:
       operationId: completeBattle
@@ -341,7 +397,7 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
     Conflict:
-      description: Revision or idempotency conflict
+      description: Revision, idempotency, duplicate command, or invalid current-state conflict
       content:
         application/json:
           schema:
@@ -657,6 +713,93 @@ components:
         nextCursor:
           type: [string, 'null']
           format: uuid
+    OfflineBattleWindowResponse:
+      type: object
+      additionalProperties: false
+      required: [windowId, openedAt, expiresAt, replay]
+      properties:
+        windowId:
+          type: string
+          format: uuid
+        openedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        replay:
+          type: boolean
+    OfflineBattleRunRequest:
+      type: object
+      additionalProperties: false
+      required: [runId, stageCode, outcome, elapsedSeconds, killCount, totalDamage, reachedWave]
+      properties:
+        runId:
+          type: string
+          format: uuid
+        stageCode:
+          type: string
+          minLength: 1
+          maxLength: 80
+        outcome:
+          type: string
+          enum: [CLEAR, LOSS, ABANDONED]
+        elapsedSeconds:
+          type: integer
+          minimum: 0
+          maximum: 86400
+        killCount:
+          type: integer
+          minimum: 0
+        totalDamage:
+          type: number
+          minimum: 0
+          multipleOf: 0.0001
+        reachedWave:
+          type: integer
+          minimum: 0
+    OfflineBattleSubmissionRequest:
+      type: object
+      additionalProperties: false
+      required: [windowId, runs]
+      properties:
+        windowId:
+          type: string
+          format: uuid
+        runs:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/OfflineBattleRunRequest'
+    OfflineBattleSubmissionResponse:
+      type: object
+      additionalProperties: false
+      required: [submissionId, rewardState, acceptedRunIds, anomalyReasons, accountExp, economy, replay]
+      properties:
+        submissionId:
+          type: string
+          format: uuid
+        rewardState:
+          type: string
+          enum: [GRANTED, HELD, REJECTED]
+        acceptedRunIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        anomalyReasons:
+          type: array
+          items:
+            type: string
+        accountExp:
+          type: integer
+          format: int64
+          minimum: 0
+        economy:
+          $ref: '#/components/schemas/EconomyResponse'
+        replay:
+          type: boolean
     BattleStartRequest:
       type: object
       additionalProperties: false

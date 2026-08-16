@@ -41,7 +41,9 @@ class GachaPostgresTest {
 
     @BeforeEach
     void cleanDatabase() {
-        jdbc.execute("truncate table battle_rewards, battle_anomalies, battle_completions, "
+        jdbc.execute("truncate table offline_battle_decisions, offline_battle_runs, "
+                + "offline_battle_submissions, offline_play_window_requests, "
+                + "offline_play_budgets, battle_rewards, battle_anomalies, battle_completions, "
                 + "battle_sessions, player_progression, "
                 + "gacha_draw_results, gacha_draws, gacha_pity_states, "
                 + "economy_bootstraps, economy_ledger, player_equipment, player_items, "
