@@ -69,6 +69,7 @@ services:
     networks:
       - nayon-internal
       - nayon-ingress
+      - coin-shared
 
 volumes:
   nayon_postgres_data:
@@ -77,3 +78,6 @@ networks:
   nayon-internal:
     internal: true
   nayon-ingress:
+  coin-shared:
+    external: true
+    name: coin-shared
