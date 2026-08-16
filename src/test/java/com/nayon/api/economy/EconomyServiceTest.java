@@ -197,5 +197,12 @@ class EconomyServiceTest {
                     Instant.parse("2026-08-16T00:00:00Z")));
             return new EconomyBootstrapResult(snapshot, false);
         }
+
+        @Override
+        public EconomySnapshot creditCurrency(
+                UUID accountId, UUID requestId, String currencyCode, long amount,
+                String reasonCode, String referenceType, UUID referenceId) {
+            throw new UnsupportedOperationException();
+        }
     }
 }

@@ -39,6 +39,88 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /me/settings:
+    get:
+      operationId: getMySettings
+      responses:
+        '200':
+          description: Current account-scoped game settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerSettingsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      operationId: patchMySettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlayerSettingsPatchRequest'
+      responses:
+        '200':
+          description: Updated account-scoped game settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerSettingsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /me/share-reward:
+    get:
+      operationId: getMyShareReward
+      responses:
+        '200':
+          description: Lifetime share and reward state for the current account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareRewardResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /me/share-reward/share-opened:
+    post:
+      operationId: markMyShareOpened
+      description: Records that the native sharesheet opened; it does not assert external delivery success.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareOpenedRequest'
+      responses:
+        '200':
+          description: Idempotent lifetime shared state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareRewardResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /me/share-reward/claim:
+    post:
+      operationId: claimMyShareReward
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Current state; retries never grant more than once
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareRewardResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /save:
     get:
       operationId: getCloudSave
@@ -520,6 +602,122 @@ components:
         updatedAt:
           type: string
           format: date-time
+    PlayerSettingsPatchRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        effectSoundEnabled:
+          type: boolean
+        backgroundMusicEnabled:
+          type: boolean
+        reducedEffectsEnabled:
+          type: boolean
+        reducedCriticalEffectsEnabled:
+          type: boolean
+        damageNumbersEnabled:
+          type: boolean
+        joystickVisible:
+          type: boolean
+        languageCode:
+          type: string
+          enum: [ko, en, ja, zh-Hans, zh-Hant, th, vi, id, es, pt, de, fr, ru, ar, tr]
+      example:
+        effectSoundEnabled: false
+        languageCode: ko
+    PlayerSettingsResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - effectSoundEnabled
+        - backgroundMusicEnabled
+        - reducedEffectsEnabled
+        - reducedCriticalEffectsEnabled
+        - damageNumbersEnabled
+        - joystickVisible
+        - languageCode
+        - revision
+      properties:
+        effectSoundEnabled:
+          type: boolean
+        backgroundMusicEnabled:
+          type: boolean
+        reducedEffectsEnabled:
+          type: boolean
+        reducedCriticalEffectsEnabled:
+          type: boolean
+        damageNumbersEnabled:
+          type: boolean
+        joystickVisible:
+          type: boolean
+        languageCode:
+          type: string
+          enum: [ko, en, ja, zh-Hans, zh-Hant, th, vi, id, es, pt, de, fr, ru, ar, tr]
+        revision:
+          type: integer
+          format: int64
+          minimum: 0
+      example:
+        effectSoundEnabled: true
+        backgroundMusicEnabled: true
+        reducedEffectsEnabled: false
+        reducedCriticalEffectsEnabled: false
+        damageNumbersEnabled: true
+        joystickVisible: true
+        languageCode: en
+        revision: 0
+    ShareOpenedRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        target:
+          type: string
+          minLength: 1
+          maxLength: 255
+      example:
+        target: com.kakao.talk
+    ShareRewardAsset:
+      type: object
+      additionalProperties: false
+      required: [assetCode, amount]
+      properties:
+        assetCode:
+          type: string
+          enum: [DIAMOND]
+        amount:
+          type: integer
+          format: int64
+          enum: [50]
+    ShareRewardResponse:
+      type: object
+      additionalProperties: false
+      required: [shared, rewardClaimed, canShare, canClaim, reward, economy]
+      properties:
+        shared:
+          type: boolean
+        rewardClaimed:
+          type: boolean
+        canShare:
+          type: boolean
+        canClaim:
+          type: boolean
+        reward:
+          $ref: '#/components/schemas/ShareRewardAsset'
+        economy:
+          $ref: '#/components/schemas/EconomyResponse'
+      example:
+        shared: false
+        rewardClaimed: false
+        canShare: true
+        canClaim: false
+        reward:
+          assetCode: DIAMOND
+          amount: 50
+        economy:
+          bootstrapped: false
+          currencies: {}
+          items: {}
+          equipment: []
     EconomyBootstrapRequest:
       type: object
       additionalProperties: false

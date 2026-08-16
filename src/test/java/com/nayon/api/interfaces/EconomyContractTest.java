@@ -228,6 +228,20 @@ class EconomyContractTest {
                             accountId, requestId, requestHash, snapshot, Instant.now()));
                     return new EconomyBootstrapResult(snapshot, false);
                 }
+
+                @Override
+                public EconomySnapshot creditCurrency(
+                        UUID accountId, UUID requestId, String currencyCode, long amount,
+                        String reasonCode, String referenceType, UUID referenceId) {
+                    EconomySnapshot current = findSnapshot(accountId);
+                    Map<String, Long> currencies = new HashMap<>(current.currencies());
+                    currencies.merge(currencyCode, amount, Long::sum);
+                    EconomySnapshot updated = new EconomySnapshot(
+                            accountId, currencies, current.items(), current.equipment(),
+                            current.bootstrapped());
+                    snapshots.put(accountId, updated);
+                    return updated;
+                }
             };
         }
     }

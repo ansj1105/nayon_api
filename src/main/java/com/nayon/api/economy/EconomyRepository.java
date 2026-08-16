@@ -16,4 +16,13 @@ public interface EconomyRepository {
             UUID requestId,
             String requestHash,
             EconomyBootstrapCommand command);
+
+    EconomySnapshot creditCurrency(
+            UUID accountId,
+            UUID requestId,
+            String currencyCode,
+            long amount,
+            String reasonCode,
+            String referenceType,
+            UUID referenceId);
 }

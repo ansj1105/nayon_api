@@ -22,25 +22,10 @@ trap cleanup EXIT
 "$pg_bin/pg_ctl" -D "$data_dir" \
   -o "-F -h 127.0.0.1 -p $port" -w start >/dev/null
 
-"$pg_bin/psql" -h 127.0.0.1 -p "$port" -U postgres -d postgres \
-  -v ON_ERROR_STOP=1 \
-  -f "$cloud_dir/db/migration/V1__create_player_account_and_save.sql" >/dev/null
-
-"$pg_bin/psql" -h 127.0.0.1 -p "$port" -U postgres -d postgres \
-  -v ON_ERROR_STOP=1 \
-  -f "$cloud_dir/db/migration/V2__create_player_economy.sql" >/dev/null
-
-"$pg_bin/psql" -h 127.0.0.1 -p "$port" -U postgres -d postgres \
-  -v ON_ERROR_STOP=1 \
-  -f "$cloud_dir/db/migration/V3__create_gacha_history.sql" >/dev/null
-
-"$pg_bin/psql" -h 127.0.0.1 -p "$port" -U postgres -d postgres \
-  -v ON_ERROR_STOP=1 \
-  -f "$cloud_dir/db/migration/V4__create_battle_records.sql" >/dev/null
-
-"$pg_bin/psql" -h 127.0.0.1 -p "$port" -U postgres -d postgres \
-  -v ON_ERROR_STOP=1 \
-  -f "$cloud_dir/db/migration/V5__create_offline_battle_submissions.sql" >/dev/null
+while IFS= read -r migration; do
+  "$pg_bin/psql" -h 127.0.0.1 -p "$port" -U postgres -d postgres \
+    -v ON_ERROR_STOP=1 -f "$migration" >/dev/null
+done < <(find "$cloud_dir/db/migration" -maxdepth 1 -name 'V*.sql' -print | sort -V)
 
 cd "$repo_dir"
 env \

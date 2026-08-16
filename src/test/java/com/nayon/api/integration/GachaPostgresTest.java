@@ -41,7 +41,8 @@ class GachaPostgresTest {
 
     @BeforeEach
     void cleanDatabase() {
-        jdbc.execute("truncate table offline_battle_decisions, offline_battle_runs, "
+        jdbc.execute("truncate table player_share_rewards, player_settings, "
+                + "offline_battle_decisions, offline_battle_runs, "
                 + "offline_battle_submissions, offline_play_window_requests, "
                 + "offline_play_budgets, battle_rewards, battle_anomalies, battle_completions, "
                 + "battle_sessions, player_progression, "

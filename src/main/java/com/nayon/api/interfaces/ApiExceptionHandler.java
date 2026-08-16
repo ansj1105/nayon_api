@@ -12,6 +12,8 @@ import com.nayon.api.gacha.InsufficientAssetException;
 import com.nayon.api.save.IdempotencyConflictException;
 import com.nayon.api.save.SaveNotFoundException;
 import com.nayon.api.save.SaveRevisionConflictException;
+import com.nayon.api.share.EconomyNotBootstrappedForShareException;
+import com.nayon.api.share.ShareRequiredException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -83,6 +85,17 @@ public class ApiExceptionHandler {
     ResponseEntity<ApiError> economyNotBootstrapped(
             EconomyNotBootstrappedException exception) {
         return error(HttpStatus.CONFLICT, "ECONOMY_NOT_BOOTSTRAPPED", exception.getMessage());
+    }
+
+    @ExceptionHandler(EconomyNotBootstrappedForShareException.class)
+    ResponseEntity<ApiError> shareEconomyNotBootstrapped(
+            EconomyNotBootstrappedForShareException exception) {
+        return error(HttpStatus.CONFLICT, "ECONOMY_NOT_BOOTSTRAPPED", exception.getMessage());
+    }
+
+    @ExceptionHandler(ShareRequiredException.class)
+    ResponseEntity<ApiError> shareRequired(ShareRequiredException exception) {
+        return error(HttpStatus.CONFLICT, "SHARE_REQUIRED", exception.getMessage());
     }
 
     @ExceptionHandler(SaveNotFoundException.class)
