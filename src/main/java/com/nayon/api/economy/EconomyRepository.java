@@ -25,4 +25,15 @@ public interface EconomyRepository {
             String reasonCode,
             String referenceType,
             UUID referenceId);
+
+    default EconomySnapshot creditItem(
+            UUID accountId,
+            UUID requestId,
+            String itemCode,
+            long amount,
+            String reasonCode,
+            String referenceType,
+            UUID referenceId) {
+        throw new UnsupportedOperationException("Item credit is not implemented");
+    }
 }

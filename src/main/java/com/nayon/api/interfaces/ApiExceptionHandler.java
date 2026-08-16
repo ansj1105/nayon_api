@@ -1,6 +1,7 @@
 package com.nayon.api.interfaces;
 
 import com.nayon.api.auth.InvalidIdentityClaimException;
+import com.nayon.api.accountlink.AccountLinkRewardException;
 import com.nayon.api.battle.BattleConflictException;
 import com.nayon.api.battle.BattleEconomyNotBootstrappedException;
 import com.nayon.api.battle.BattleNotFoundException;
@@ -9,6 +10,8 @@ import com.nayon.api.economy.EconomyBootstrapConflictException;
 import com.nayon.api.gacha.EconomyNotBootstrappedException;
 import com.nayon.api.gacha.GachaConflictException;
 import com.nayon.api.gacha.InsufficientAssetException;
+import com.nayon.api.korion.KorionWalletLinkException;
+import com.nayon.api.legal.LegalDocumentNotFoundException;
 import com.nayon.api.save.IdempotencyConflictException;
 import com.nayon.api.save.SaveNotFoundException;
 import com.nayon.api.save.SaveRevisionConflictException;
@@ -29,6 +32,28 @@ import java.util.UUID;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    @ExceptionHandler(LegalDocumentNotFoundException.class)
+    ResponseEntity<ApiError> legalDocumentNotFound(LegalDocumentNotFoundException exception) {
+        return error(HttpStatus.NOT_FOUND, "LEGAL_DOCUMENT_NOT_FOUND", exception.getMessage());
+    }
+
+    @ExceptionHandler(AccountLinkRewardException.class)
+    ResponseEntity<ApiError> accountLinkReward(AccountLinkRewardException exception) {
+        return error(HttpStatus.CONFLICT, exception.code(), exception.getMessage());
+    }
+
+    @ExceptionHandler(KorionWalletLinkException.class)
+    ResponseEntity<ApiError> korionWalletLink(KorionWalletLinkException exception) {
+        HttpStatus status = switch (exception.code()) {
+            case "KORION_WALLET_LINK_NOT_FOUND", "KORION_WALLET_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+            case "KORION_WALLET_LINK_RATE_LIMITED", "KORION_RATE_LIMITED" -> HttpStatus.TOO_MANY_REQUESTS;
+            case "KORION_GATEWAY_FAILED", "KORION_GATEWAY_NOT_CONFIGURED",
+                 "KORION_GATEWAY_INVALID_RESPONSE" -> HttpStatus.SERVICE_UNAVAILABLE;
+            default -> HttpStatus.CONFLICT;
+        };
+        return error(status, exception.code(), exception.getMessage());
+    }
 
     @ExceptionHandler(SaveRevisionConflictException.class)
     ResponseEntity<ApiError> saveConflict(SaveRevisionConflictException exception) {

@@ -41,7 +41,7 @@ class EconomyPostgresTest {
 
     @BeforeEach
     void cleanDatabase() {
-        jdbc.execute("truncate table player_share_rewards, player_settings, "
+        jdbc.execute("truncate table player_account_link_rewards, player_korion_wallet_links, korion_wallet_link_requests, player_share_rewards, player_settings, "
                 + "offline_battle_decisions, offline_battle_runs, "
                 + "offline_battle_submissions, offline_play_window_requests, "
                 + "offline_play_budgets, battle_rewards, battle_anomalies, battle_completions, "

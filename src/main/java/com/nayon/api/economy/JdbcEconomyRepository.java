@@ -154,6 +154,45 @@ public class JdbcEconomyRepository implements EconomyRepository {
         return findSnapshot(accountId);
     }
 
+    @Override
+    public EconomySnapshot creditItem(
+            UUID accountId,
+            UUID requestId,
+            String itemCode,
+            long amount,
+            String reasonCode,
+            String referenceType,
+            UUID referenceId) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Credit amount must be positive");
+        }
+        lock("economy-account:" + accountId);
+        jdbc.update("""
+                insert into player_items(account_id, item_code, quantity)
+                values (?, ?, 0)
+                on conflict (account_id, item_code) do nothing
+                """, accountId, itemCode);
+        long before = jdbc.queryForObject("""
+                select quantity from player_items
+                 where account_id = ? and item_code = ? for update
+                """, Long.class, accountId, itemCode);
+        long after = Math.addExact(before, amount);
+        jdbc.update("""
+                update player_items
+                   set quantity = ?, version = version + 1, updated_at = now()
+                 where account_id = ? and item_code = ?
+                """, after, accountId, itemCode);
+        jdbc.update("""
+                insert into economy_ledger(
+                    id, account_id, asset_type, asset_code, delta,
+                    balance_before, balance_after, reason_code,
+                    reference_type, reference_id, request_id)
+                values (?, ?, 'ITEM', ?, ?, ?, ?, ?, ?, ?, ?)
+                """, UUID.randomUUID(), accountId, itemCode, amount,
+                before, after, reasonCode, referenceType, referenceId, requestId);
+        return findSnapshot(accountId);
+    }
+
     private Map<String, Long> queryAssets(String sql, UUID accountId) {
         Map<String, Long> values = new LinkedHashMap<>();
         jdbc.query(sql, (RowCallbackHandler) resultSet -> values.put(

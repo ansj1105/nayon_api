@@ -21,6 +21,9 @@ nayon:
     provider: ${NAYON_AUTH_PROVIDER:}
     provider-claim: nayon:provider
     subject-claim: sub
+  korion-wallet-link:
+    base-url: ${KORION_WALLET_LINK_BASE_URL:}
+    internal-api-key: ${KORION_WALLET_LINK_INTERNAL_API_KEY:}
 
 management:
   endpoints:
