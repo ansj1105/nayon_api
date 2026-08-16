@@ -1,6 +1,9 @@
 package com.nayon.api.interfaces;
 
 import com.nayon.api.auth.InvalidIdentityClaimException;
+import com.nayon.api.battle.BattleConflictException;
+import com.nayon.api.battle.BattleEconomyNotBootstrappedException;
+import com.nayon.api.battle.BattleNotFoundException;
 import com.nayon.api.economy.EconomyBootstrapConflictException;
 import com.nayon.api.gacha.EconomyNotBootstrappedException;
 import com.nayon.api.gacha.GachaConflictException;
@@ -13,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import jakarta.validation.ConstraintViolationException;
@@ -47,9 +51,25 @@ public class ApiExceptionHandler {
         return error(HttpStatus.CONFLICT, "IDEMPOTENCY_KEY_REUSED", exception.getMessage());
     }
 
+    @ExceptionHandler(BattleConflictException.class)
+    ResponseEntity<ApiError> battleConflict(BattleConflictException exception) {
+        return error(HttpStatus.CONFLICT, "BATTLE_CONFLICT", exception.getMessage());
+    }
+
+    @ExceptionHandler(BattleEconomyNotBootstrappedException.class)
+    ResponseEntity<ApiError> battleEconomyNotBootstrapped(
+            BattleEconomyNotBootstrappedException exception) {
+        return error(HttpStatus.CONFLICT, "ECONOMY_NOT_BOOTSTRAPPED", exception.getMessage());
+    }
+
+    @ExceptionHandler(BattleNotFoundException.class)
+    ResponseEntity<ApiError> battleNotFound(BattleNotFoundException exception) {
+        return error(HttpStatus.NOT_FOUND, "BATTLE_NOT_FOUND", exception.getMessage());
+    }
+
     @ExceptionHandler(InsufficientAssetException.class)
     ResponseEntity<ApiError> insufficientAsset(InsufficientAssetException exception) {
-        return error(HttpStatus.CONFLICT, "INSUFFICIENT_ASSET", exception.getMessage());
+        return error(HttpStatus.UNPROCESSABLE_ENTITY, "INSUFFICIENT_ASSET", exception.getMessage());
     }
 
     @ExceptionHandler(EconomyNotBootstrappedException.class)
@@ -71,6 +91,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler({
             MethodArgumentNotValidException.class,
             MissingRequestHeaderException.class,
+            MethodArgumentTypeMismatchException.class,
             HttpMessageNotReadableException.class,
             ConstraintViolationException.class,
             IllegalArgumentException.class

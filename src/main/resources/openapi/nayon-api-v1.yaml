@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: NYAON API
-  version: 1.2.0
-  description: Social-account-isolated profile, cloud save, economy, and server gacha API.
+  version: 1.3.0
+  description: Social-account-isolated profile, cloud save, economy, gacha, and battle audit API.
 servers:
   - url: /api/v1
 security:
@@ -177,6 +177,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
     get:
       operationId: listGachaDraws
       parameters:
@@ -205,6 +207,104 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /battles:
+    post:
+      operationId: startBattle
+      description: Issues an expiring server battle session using a versioned stage snapshot.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BattleStartRequest'
+      responses:
+        '200':
+          description: Existing session for an identical retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BattleSessionResponse'
+        '201':
+          description: Issued battle session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BattleSessionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    get:
+      operationId: listBattles
+      parameters:
+        - name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Account-isolated completed battle history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BattleHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /battles/{battleId}/complete:
+    post:
+      operationId: completeBattle
+      description: Stores metrics, evaluates deterministic anomaly rules, and grants or holds reward atomically.
+      parameters:
+        - name: battleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BattleCompleteRequest'
+      responses:
+        '200':
+          description: Existing completion for an identical retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BattleCompletionResponse'
+        '201':
+          description: Durable battle completion and reward decision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BattleCompletionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 components:
   securitySchemes:
     bearerAuth:
@@ -242,6 +342,12 @@ components:
             $ref: '#/components/schemas/ApiError'
     Conflict:
       description: Revision or idempotency conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    UnprocessableEntity:
+      description: Valid command cannot be completed with the current account state
       content:
         application/json:
           schema:
@@ -538,6 +644,116 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/GachaDrawResponse'
+        nextCursor:
+          type: [string, 'null']
+          format: uuid
+    BattleStartRequest:
+      type: object
+      additionalProperties: false
+      required: [stageCode, clientBuild]
+      properties:
+        stageCode:
+          type: string
+          minLength: 1
+          maxLength: 80
+          example: STAGE_1
+        clientBuild:
+          type: string
+          minLength: 1
+          maxLength: 40
+    BattleSessionResponse:
+      type: object
+      additionalProperties: false
+      required: [battleId, stageCode, configVersion, startedAt, expiresAt, replay]
+      properties:
+        battleId:
+          type: string
+          format: uuid
+        stageCode:
+          type: string
+          maxLength: 80
+        configVersion:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        replay:
+          type: boolean
+    BattleCompleteRequest:
+      type: object
+      additionalProperties: false
+      required: [outcome, elapsedSeconds, killCount, totalDamage, reachedWave, clientEndedAt]
+      properties:
+        outcome:
+          type: string
+          enum: [CLEAR, LOSS, ABANDONED]
+        elapsedSeconds:
+          type: integer
+          description: Negative values remain recordable and cause a held anomaly decision.
+        killCount:
+          type: integer
+          description: Negative values remain recordable and cause a held anomaly decision.
+        totalDamage:
+          type: number
+          multipleOf: 0.0001
+          description: Negative values remain recordable and cause a held anomaly decision.
+        reachedWave:
+          type: integer
+          description: Out-of-range values remain recordable and cause a held anomaly decision.
+        clientEndedAt:
+          type: string
+          format: date-time
+    BattleCompletionResponse:
+      type: object
+      additionalProperties: false
+      required: [battleId, stageCode, outcome, rewardState, gold, accountExp, totalAccountExp, anomalyReasons, economy, completedAt, replay]
+      properties:
+        battleId:
+          type: string
+          format: uuid
+        stageCode:
+          type: string
+        outcome:
+          type: string
+          enum: [CLEAR, LOSS, ABANDONED]
+        rewardState:
+          type: string
+          enum: [GRANTED, HELD, REJECTED]
+        gold:
+          type: integer
+          format: int64
+          minimum: 0
+        accountExp:
+          type: integer
+          format: int64
+          minimum: 0
+        totalAccountExp:
+          type: integer
+          format: int64
+          minimum: 0
+        anomalyReasons:
+          type: array
+          items:
+            type: string
+        economy:
+          $ref: '#/components/schemas/EconomyResponse'
+        completedAt:
+          type: string
+          format: date-time
+        replay:
+          type: boolean
+    BattleHistoryResponse:
+      type: object
+      additionalProperties: false
+      required: [battles]
+      properties:
+        battles:
+          type: array
+          items:
+            $ref: '#/components/schemas/BattleCompletionResponse'
         nextCursor:
           type: [string, 'null']
           format: uuid

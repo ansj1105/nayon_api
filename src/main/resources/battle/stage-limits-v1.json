@@ -1,0 +1,100 @@
+{
+  "version": "unity-stage-2026-08-16",
+  "sessionTtlSeconds": 7200,
+  "elapsedGraceSeconds": 30,
+  "clockDriftSeconds": 600,
+  "minimumClearServerSeconds": 5,
+  "killTolerancePercent": 10,
+  "stages": [
+    {
+      "stageCode": "STAGE_1",
+      "stageIndex": 1,
+      "maxWave": 16,
+      "maxKills": 5905,
+      "maxDamage": 5905000000,
+      "clearGold": 1000,
+      "clearExp": 5
+    },
+    {
+      "stageCode": "STAGE_2",
+      "stageIndex": 2,
+      "maxWave": 16,
+      "maxKills": 16742,
+      "maxDamage": 16742000000,
+      "clearGold": 5000,
+      "clearExp": 5
+    },
+    {
+      "stageCode": "STAGE_3",
+      "stageIndex": 3,
+      "maxWave": 16,
+      "maxKills": 17252,
+      "maxDamage": 17252000000,
+      "clearGold": 10000,
+      "clearExp": 5
+    },
+    {
+      "stageCode": "STAGE_4",
+      "stageIndex": 4,
+      "maxWave": 16,
+      "maxKills": 17762,
+      "maxDamage": 17762000000,
+      "clearGold": 15000,
+      "clearExp": 5
+    },
+    {
+      "stageCode": "STAGE_5",
+      "stageIndex": 5,
+      "maxWave": 16,
+      "maxKills": 18272,
+      "maxDamage": 18272000000,
+      "clearGold": 20000,
+      "clearExp": 5
+    },
+    {
+      "stageCode": "STAGE_6",
+      "stageIndex": 6,
+      "maxWave": 16,
+      "maxKills": 18782,
+      "maxDamage": 18782000000,
+      "clearGold": 25000,
+      "clearExp": 5
+    },
+    {
+      "stageCode": "STAGE_7",
+      "stageIndex": 7,
+      "maxWave": 16,
+      "maxKills": 19292,
+      "maxDamage": 19292000000,
+      "clearGold": 30000,
+      "clearExp": 5
+    },
+    {
+      "stageCode": "STAGE_8",
+      "stageIndex": 8,
+      "maxWave": 16,
+      "maxKills": 19802,
+      "maxDamage": 19802000000,
+      "clearGold": 35000,
+      "clearExp": 5
+    },
+    {
+      "stageCode": "STAGE_9",
+      "stageIndex": 9,
+      "maxWave": 16,
+      "maxKills": 20312,
+      "maxDamage": 20312000000,
+      "clearGold": 40000,
+      "clearExp": 5
+    },
+    {
+      "stageCode": "STAGE_10",
+      "stageIndex": 10,
+      "maxWave": 16,
+      "maxKills": 20822,
+      "maxDamage": 20822000000,
+      "clearGold": 45000,
+      "clearExp": 5
+    }
+  ]
+}

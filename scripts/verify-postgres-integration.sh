@@ -34,6 +34,10 @@ trap cleanup EXIT
   -v ON_ERROR_STOP=1 \
   -f "$cloud_dir/db/migration/V3__create_gacha_history.sql" >/dev/null
 
+"$pg_bin/psql" -h 127.0.0.1 -p "$port" -U postgres -d postgres \
+  -v ON_ERROR_STOP=1 \
+  -f "$cloud_dir/db/migration/V4__create_battle_records.sql" >/dev/null
+
 cd "$repo_dir"
 env \
   E2E_DB=1 \
