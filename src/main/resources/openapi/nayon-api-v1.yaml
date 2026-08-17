@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: NYAON API
-  version: 1.6.0
-  description: Social-account-isolated profile, cloud save, economy, store purchase, gacha, and battle audit API.
+  version: 1.7.0
+  description: Social-account-isolated profile, cloud save, economy, store purchase, subscription, reward, gacha, and battle audit API.
 servers:
   - url: /api/v1
 security:
@@ -332,6 +332,193 @@ paths:
                 $ref: '#/components/schemas/FirstPurchaseRewardResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /subscriptions/catalog:
+    get:
+      operationId: getSubscriptionCatalog
+      description: Returns independent monthly subscription products and server-owned benefit values. Prices remain owned by Google Play.
+      parameters:
+        - name: platform
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [GOOGLE_PLAY]
+      responses:
+        '200':
+          description: Active monthly subscription catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionCatalogResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /me/subscriptions:
+    get:
+      operationId: getMySubscriptions
+      responses:
+        '200':
+          description: Current account subscription entitlement states
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /store/subscriptions/google-play/verify:
+    post:
+      operationId: verifyGooglePlaySubscription
+      description: Verifies Google subscriptions v2 state and updates one independent account entitlement.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionVerifyRequest'
+      responses:
+        '200':
+          description: Existing result for an identical request or token retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionVerifyResponse'
+        '201':
+          description: Subscription state verified and persisted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionVerifyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /public/google-play/rtdn:
+    post:
+      operationId: receiveGooglePlayRtdn
+      description: Authenticated Google Pub/Sub push; the server fetches subscriptions v2 state before changing entitlement.
+      security:
+        - googleOidc: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GooglePlayRtdnPushRequest'
+      responses:
+        '204':
+          description: New or duplicate notification accepted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /me/level-rewards:
+    get:
+      operationId: getMyLevelRewards
+      responses:
+        '200':
+          description: Server account level, independent subscription states, and lifetime claim state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LevelRewardListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /me/level-rewards/{trackCode}/{requiredLevel}/claim:
+    post:
+      operationId: claimLevelReward
+      parameters:
+        - name: trackCode
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/LevelRewardTrackCode'
+        - name: requiredLevel
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Existing result for an identical retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LevelRewardClaimResponse'
+        '201':
+          description: Lifetime reward granted once by the authoritative ledger
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LevelRewardClaimResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /me/subscriptions/{planCode}/daily-reward/claim:
+    post:
+      operationId: claimSubscriptionDailyReward
+      parameters:
+        - name: planCode
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/SubscriptionPlanCode'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Existing result for an identical daily reward retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionDailyRewardResponse'
+        '201':
+          description: Active-plan daily reward granted once for the server date
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionDailyRewardResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   /save:
     get:
       operationId: getCloudSave
@@ -751,6 +938,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    googleOidc:
+      type: http
+      scheme: bearer
+      bearerFormat: Google OIDC JWT
   parameters:
     IdempotencyKey:
       name: Idempotency-Key
@@ -770,6 +961,12 @@ components:
             $ref: '#/components/schemas/ApiError'
     Unauthorized:
       description: Missing or invalid access token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Forbidden:
+      description: Authenticated caller is not authorized for this endpoint
       content:
         application/json:
           schema:
@@ -875,6 +1072,245 @@ components:
           type: string
           enum: [PENDING, VERIFIED]
         expiresAt: { type: string, format: date-time }
+    SubscriptionPlanCode:
+      type: string
+      enum: [MONTHLY_GROWTH, MONTHLY_ADVANCED]
+    SubscriptionState:
+      type: string
+      enum: [PENDING, ACTIVE, CANCELED, GRACE_PERIOD, ON_HOLD, PAUSED, EXPIRED, REVOKED]
+    SubscriptionBenefit:
+      type: object
+      additionalProperties: false
+      required: [code, value, version]
+      properties:
+        code:
+          type: string
+          enum: [INITIAL_DIAMOND, DAILY_DIAMOND, SKILL_REFRESH_COUNT, REVIVE_COUNT, MAX_ENERGY, GOLD_BONUS_BPS, BATTLE_SPEED_UNLOCK, REWARDED_AD_SKIP]
+        value:
+          type: integer
+          format: int64
+          minimum: 1
+        version:
+          type: integer
+          minimum: 1
+    SubscriptionCatalogPlan:
+      type: object
+      additionalProperties: false
+      required: [planCode, productId, productType, rewardTrackCode, benefits]
+      properties:
+        planCode:
+          $ref: '#/components/schemas/SubscriptionPlanCode'
+        productId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        productType:
+          type: string
+          enum: [SUBSCRIPTION]
+        rewardTrackCode:
+          $ref: '#/components/schemas/LevelRewardTrackCode'
+        benefits:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionBenefit'
+    SubscriptionCatalogResponse:
+      type: object
+      additionalProperties: false
+      required: [platform, obfuscatedAccountId, plans]
+      properties:
+        platform:
+          type: string
+          enum: [GOOGLE_PLAY]
+        obfuscatedAccountId:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        plans:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionCatalogPlan'
+    SubscriptionEntitlement:
+      type: object
+      additionalProperties: false
+      required: [planCode, state, entitled, autoRenewing]
+      properties:
+        planCode:
+          $ref: '#/components/schemas/SubscriptionPlanCode'
+        state:
+          $ref: '#/components/schemas/SubscriptionState'
+        entitled:
+          type: boolean
+        autoRenewing:
+          type: boolean
+        startedAt:
+          type: [string, 'null']
+          format: date-time
+        expiresAt:
+          type: [string, 'null']
+          format: date-time
+        lastVerifiedAt:
+          type: [string, 'null']
+          format: date-time
+    SubscriptionListResponse:
+      type: object
+      additionalProperties: false
+      required: [serverTime, subscriptions]
+      properties:
+        serverTime:
+          type: string
+          format: date-time
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionEntitlement'
+    SubscriptionVerifyRequest:
+      type: object
+      additionalProperties: false
+      required: [productId, purchaseToken]
+      properties:
+        productId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        purchaseToken:
+          type: string
+          minLength: 1
+          maxLength: 4096
+    SubscriptionRewardGrant:
+      type: object
+      additionalProperties: false
+      required: [assetCode, amount, balance]
+      properties:
+        assetCode:
+          type: string
+          enum: [DIAMOND]
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+        balance:
+          type: integer
+          format: int64
+          minimum: 0
+    SubscriptionVerifyResponse:
+      type: object
+      additionalProperties: false
+      required: [subscription, replay]
+      properties:
+        subscription:
+          $ref: '#/components/schemas/SubscriptionEntitlement'
+        initialReward:
+          oneOf:
+            - $ref: '#/components/schemas/SubscriptionRewardGrant'
+            - type: 'null'
+        replay:
+          type: boolean
+    GooglePlayRtdnPushRequest:
+      type: object
+      additionalProperties: false
+      required: [message]
+      properties:
+        message:
+          type: object
+          additionalProperties: false
+          required: [messageId, data]
+          properties:
+            messageId:
+              type: string
+              minLength: 1
+              maxLength: 200
+            data:
+              type: string
+              format: byte
+              maxLength: 16384
+        subscription:
+          type: [string, 'null']
+          maxLength: 500
+    LevelRewardTrackCode:
+      type: string
+      enum: [FREE, PREMIUM, ROYAL]
+    LevelRewardCatalogItem:
+      type: object
+      additionalProperties: false
+      required: [version, trackCode, requiredLevel, assetType, assetCode, amount, claimed, claimable]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        trackCode:
+          $ref: '#/components/schemas/LevelRewardTrackCode'
+        requiredLevel:
+          type: integer
+          minimum: 1
+          maximum: 50
+        assetType:
+          type: string
+          enum: [CURRENCY, ITEM]
+        assetCode:
+          type: string
+          minLength: 1
+          maxLength: 80
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+        claimed:
+          type: boolean
+        claimable:
+          type: boolean
+    LevelRewardListResponse:
+      type: object
+      additionalProperties: false
+      required: [accountLevel, totalAccountExp, subscriptions, rewards]
+      properties:
+        accountLevel:
+          type: integer
+          minimum: 1
+          maximum: 50
+        totalAccountExp:
+          type: integer
+          format: int64
+          minimum: 0
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionEntitlement'
+        rewards:
+          type: array
+          items:
+            $ref: '#/components/schemas/LevelRewardCatalogItem'
+    LevelRewardClaimResponse:
+      type: object
+      additionalProperties: false
+      required: [claimId, reward, economy, replay]
+      properties:
+        claimId:
+          type: string
+          format: uuid
+        reward:
+          $ref: '#/components/schemas/LevelRewardCatalogItem'
+        economy:
+          $ref: '#/components/schemas/EconomyResponse'
+        replay:
+          type: boolean
+    SubscriptionDailyRewardResponse:
+      type: object
+      additionalProperties: false
+      required: [grantId, planCode, rewardDate, reward, economy, replay]
+      properties:
+        grantId:
+          type: string
+          format: uuid
+        planCode:
+          $ref: '#/components/schemas/SubscriptionPlanCode'
+        rewardDate:
+          type: string
+          format: date
+        reward:
+          $ref: '#/components/schemas/SubscriptionRewardGrant'
+        economy:
+          $ref: '#/components/schemas/EconomyResponse'
+        replay:
+          type: boolean
     StoreReward:
       type: object
       additionalProperties: false
