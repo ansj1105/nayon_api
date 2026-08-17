@@ -50,7 +50,7 @@ class KorionWalletLinkPostgresTest {
     @BeforeEach
     void cleanDatabase() {
         gateway.status = KorionWalletLinkStatus.PENDING;
-        jdbc.execute("truncate table player_first_purchase_rewards, store_purchase_receipts, store_product_versions, store_products, player_account_link_rewards, player_korion_wallet_links, "
+        jdbc.execute("truncate table player_limited_benefit_claims, admob_reward_callbacks, limited_benefit_ad_sessions, player_first_purchase_rewards, store_purchase_receipts, store_product_versions, store_products, player_account_link_rewards, player_korion_wallet_links, "
                 + "korion_wallet_link_requests, player_share_rewards, player_settings, "
                 + "offline_battle_decisions, offline_battle_runs, offline_battle_submissions, "
                 + "offline_play_window_requests, offline_play_budgets, battle_rewards, "

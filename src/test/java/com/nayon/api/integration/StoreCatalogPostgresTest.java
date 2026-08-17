@@ -28,7 +28,7 @@ class StoreCatalogPostgresTest {
 
     @BeforeEach
     void cleanDatabase() {
-        jdbc.execute("truncate table player_first_purchase_rewards, store_purchase_receipts, "
+        jdbc.execute("truncate table player_limited_benefit_claims, admob_reward_callbacks, limited_benefit_ad_sessions, player_first_purchase_rewards, store_purchase_receipts, "
                 + "store_product_versions, store_products");
     }
 

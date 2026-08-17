@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: NYAON API
-  version: 1.5.0
+  version: 1.6.0
   description: Social-account-isolated profile, cloud save, economy, store purchase, gacha, and battle audit API.
 servers:
   - url: /api/v1
@@ -654,6 +654,60 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /events/limited-benefits/current:
+    get:
+      operationId: getCurrentLimitedBenefit
+      responses:
+        '200':
+          description: Current server-authoritative daily campaign
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LimitedBenefitCampaignResponse'
+        '204':
+          description: No active campaign
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /events/limited-benefits/offers/{offerCode}/claims:
+    post:
+      operationId: claimLimitedBenefitOffer
+      parameters:
+        - name: offerCode
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LimitedBenefitClaimRequest'
+      responses:
+        '200':
+          description: Reward granted exactly once or replayed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LimitedBenefitClaimResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
 components:
   securitySchemes:
     bearerAuth:
@@ -714,6 +768,62 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
   schemas:
+    LimitedBenefitCampaignResponse:
+      type: object
+      required: [campaignVersionId, campaignCode, version, serverTime, cycleDate, resetsAt, offers]
+      properties:
+        campaignVersionId: { type: string, format: uuid }
+        campaignCode: { type: string }
+        version: { type: integer, minimum: 1 }
+        serverTime: { type: string, format: date-time }
+        cycleDate: { type: string, format: date }
+        resetsAt: { type: string, format: date-time }
+        offers:
+          type: array
+          items: { $ref: '#/components/schemas/LimitedBenefitOffer' }
+    LimitedBenefitOffer:
+      type: object
+      required: [offerCode, displayOrder, title, fulfillmentType, state, rewards]
+      properties:
+        offerCode: { type: string }
+        displayOrder: { type: integer, minimum: 0 }
+        title: { type: string }
+        fulfillmentType:
+          type: string
+          enum: [FREE, GOOGLE_PLAY, ADMOB_SSV]
+        productId: { type: [string, 'null'] }
+        state:
+          type: string
+          enum: [LOCKED, AVAILABLE, PROVIDER_UNAVAILABLE, CLAIMED]
+        rewards:
+          type: array
+          items: { $ref: '#/components/schemas/LimitedBenefitReward' }
+    LimitedBenefitReward:
+      type: object
+      required: [type, code, amount]
+      properties:
+        type:
+          type: string
+          enum: [CURRENCY, ITEM, EQUIPMENT_BOX]
+        code: { type: string }
+        amount: { type: integer, format: int64, minimum: 1 }
+    LimitedBenefitClaimRequest:
+      type: object
+      properties:
+        receiptId: { type: [string, 'null'], format: uuid }
+        adSessionId: { type: [string, 'null'], format: uuid }
+    LimitedBenefitClaimResponse:
+      type: object
+      required: [claimId, offerCode, cycleDate, rewards, economy, replay]
+      properties:
+        claimId: { type: string, format: uuid }
+        offerCode: { type: string }
+        cycleDate: { type: string, format: date }
+        rewards:
+          type: array
+          items: { $ref: '#/components/schemas/LimitedBenefitReward' }
+        economy: { $ref: '#/components/schemas/EconomyResponse' }
+        replay: { type: boolean }
     StoreReward:
       type: object
       additionalProperties: false
