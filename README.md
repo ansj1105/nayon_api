@@ -42,6 +42,13 @@ The source contract is `src/main/resources/openapi/nayon-api-v1.yaml`.
 - `POST /api/v1/offline-battles`
 - `GET /api/v1/store/catalog?platform=GOOGLE_PLAY`
 - `POST /api/v1/store/purchases/google-play/verify`
+- `GET /api/v1/subscriptions/catalog?platform=GOOGLE_PLAY`
+- `GET /api/v1/me/subscriptions`
+- `POST /api/v1/store/subscriptions/google-play/verify`
+- `POST /api/v1/public/google-play/rtdn`
+- `GET /api/v1/me/level-rewards`
+- `POST /api/v1/me/level-rewards/{trackCode}/{requiredLevel}/claim`
+- `POST /api/v1/me/subscriptions/{planCode}/daily-reward/claim`
 
 All game endpoints require a Cognito Bearer access token. `GET /actuator/health` and `GET /actuator/info` are public.
 
@@ -59,3 +66,17 @@ Runtime secrets/configuration:
 
 Keep the service-account JSON in Secrets Manager/runtime storage only. See
 `docs/google-play-store-setup.md` for Play Console products and DB activation order.
+
+## Google Play monthly subscriptions
+
+`MONTHLY_GROWTH` and `MONTHLY_ADVANCED` are separate one-month auto-renewing
+subscriptions. Their Play product IDs, prices, benefit values, and level-reward
+amounts are deployment data rather than application constants. Level rewards are
+lifetime one-time claims; they do not reset when a subscription renews.
+
+RTDN push authentication requires `GOOGLE_PLAY_RTDN_JWK_SET_URI`,
+`GOOGLE_PLAY_RTDN_AUDIENCE`, and
+`GOOGLE_PLAY_RTDN_SERVICE_ACCOUNT_EMAIL`. See
+`docs/google-play-subscription-setup.md` for the Play Console, Pub/Sub, catalog,
+and license-test setup order. Keep the catalog inactive until V13 and the API
+health check have passed.

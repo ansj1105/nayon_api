@@ -54,6 +54,9 @@ services:
       STORE_ACCOUNT_HASH_KEY: ${STORE_ACCOUNT_HASH_KEY:-}
       GOOGLE_PLAY_PACKAGE_NAME: ${GOOGLE_PLAY_PACKAGE_NAME:-com.korion.Nayon}
       GOOGLE_PLAY_CREDENTIALS_FILE: /run/secrets/google-play-service-account.json
+      GOOGLE_PLAY_RTDN_JWK_SET_URI: ${GOOGLE_PLAY_RTDN_JWK_SET_URI:-https://www.googleapis.com/oauth2/v3/certs}
+      GOOGLE_PLAY_RTDN_AUDIENCE: ${GOOGLE_PLAY_RTDN_AUDIENCE}
+      GOOGLE_PLAY_RTDN_SERVICE_ACCOUNT_EMAIL: ${GOOGLE_PLAY_RTDN_SERVICE_ACCOUNT_EMAIL}
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+UseSerialGC
     volumes:
       - ${GOOGLE_PLAY_CREDENTIALS_HOST_FILE:-/dev/null}:/run/secrets/google-play-service-account.json:ro
