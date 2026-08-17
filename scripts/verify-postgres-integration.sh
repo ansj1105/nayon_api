@@ -6,6 +6,7 @@ cloud_dir="${NAYON_CLOUD_DIR:-/home/ubuntu/work/nayon_cloud}"
 pg_bin="${PG_BIN:-/home/ubuntu/work/.tools/postgresql/16.3/bin}"
 gradle_home="${NAYON_GRADLE_HOME:-/home/ubuntu/work/.gradle-cache}"
 port="${NAYON_TEST_DB_PORT:-55432}"
+test_pattern="${NAYON_TEST_PATTERN:-*PostgresTest}"
 
 work_dir="$(mktemp -d /tmp/nayon-api-pg.XXXXXX)"
 data_dir="$work_dir/data"
@@ -34,4 +35,4 @@ env \
   DB_USERNAME=postgres \
   DB_PASSWORD=test-only-password \
   GRADLE_USER_HOME="$gradle_home" \
-  ./gradlew cleanTest test --tests '*PostgresTest' --console=plain --no-daemon
+  ./gradlew cleanTest test --tests "$test_pattern" --console=plain --no-daemon

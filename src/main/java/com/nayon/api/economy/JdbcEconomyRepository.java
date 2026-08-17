@@ -122,10 +122,24 @@ public class JdbcEconomyRepository implements EconomyRepository {
             String reasonCode,
             String referenceType,
             UUID referenceId) {
+        return creditCurrencyWithLedger(accountId, requestId, currencyCode,
+                amount, reasonCode, referenceType, referenceId).economy();
+    }
+
+    @Override
+    public EconomyCreditResult creditCurrencyWithLedger(
+            UUID accountId,
+            UUID requestId,
+            String currencyCode,
+            long amount,
+            String reasonCode,
+            String referenceType,
+            UUID referenceId) {
         if (amount <= 0) {
             throw new IllegalArgumentException("Credit amount must be positive");
         }
         lock("economy-account:" + accountId);
+        UUID ledgerId = UUID.randomUUID();
         jdbc.update("""
                 insert into player_wallets(account_id, currency_code, balance)
                 values (?, ?, 0)
@@ -149,9 +163,9 @@ public class JdbcEconomyRepository implements EconomyRepository {
                     balance_before, balance_after, reason_code,
                     reference_type, reference_id, request_id)
                 values (?, ?, 'CURRENCY', ?, ?, ?, ?, ?, ?, ?, ?)
-                """, UUID.randomUUID(), accountId, currencyCode, amount,
+                """, ledgerId, accountId, currencyCode, amount,
                 before, after, reasonCode, referenceType, referenceId, requestId);
-        return findSnapshot(accountId);
+        return new EconomyCreditResult(ledgerId, findSnapshot(accountId));
     }
 
     @Override
@@ -163,10 +177,24 @@ public class JdbcEconomyRepository implements EconomyRepository {
             String reasonCode,
             String referenceType,
             UUID referenceId) {
+        return creditItemWithLedger(accountId, requestId, itemCode,
+                amount, reasonCode, referenceType, referenceId).economy();
+    }
+
+    @Override
+    public EconomyCreditResult creditItemWithLedger(
+            UUID accountId,
+            UUID requestId,
+            String itemCode,
+            long amount,
+            String reasonCode,
+            String referenceType,
+            UUID referenceId) {
         if (amount <= 0) {
             throw new IllegalArgumentException("Credit amount must be positive");
         }
         lock("economy-account:" + accountId);
+        UUID ledgerId = UUID.randomUUID();
         jdbc.update("""
                 insert into player_items(account_id, item_code, quantity)
                 values (?, ?, 0)
@@ -188,9 +216,9 @@ public class JdbcEconomyRepository implements EconomyRepository {
                     balance_before, balance_after, reason_code,
                     reference_type, reference_id, request_id)
                 values (?, ?, 'ITEM', ?, ?, ?, ?, ?, ?, ?, ?)
-                """, UUID.randomUUID(), accountId, itemCode, amount,
+                """, ledgerId, accountId, itemCode, amount,
                 before, after, reasonCode, referenceType, referenceId, requestId);
-        return findSnapshot(accountId);
+        return new EconomyCreditResult(ledgerId, findSnapshot(accountId));
     }
 
     private Map<String, Long> queryAssets(String sql, UUID accountId) {

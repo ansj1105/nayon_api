@@ -26,7 +26,29 @@ public interface EconomyRepository {
             String referenceType,
             UUID referenceId);
 
+    default EconomyCreditResult creditCurrencyWithLedger(
+            UUID accountId,
+            UUID requestId,
+            String currencyCode,
+            long amount,
+            String reasonCode,
+            String referenceType,
+            UUID referenceId) {
+        throw new UnsupportedOperationException("Currency credit result is not implemented");
+    }
+
     default EconomySnapshot creditItem(
+            UUID accountId,
+            UUID requestId,
+            String itemCode,
+            long amount,
+            String reasonCode,
+            String referenceType,
+            UUID referenceId) {
+        throw new UnsupportedOperationException("Item credit is not implemented");
+    }
+
+    default EconomyCreditResult creditItemWithLedger(
             UUID accountId,
             UUID requestId,
             String itemCode,

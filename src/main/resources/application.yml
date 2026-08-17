@@ -31,6 +31,10 @@ nayon:
       credentials-file: ${GOOGLE_PLAY_CREDENTIALS_FILE:}
       api-base-url: ${GOOGLE_PLAY_API_BASE_URL:https://androidpublisher.googleapis.com}
       timeout: ${GOOGLE_PLAY_API_TIMEOUT:5s}
+      rtdn:
+        jwk-set-uri: ${GOOGLE_PLAY_RTDN_JWK_SET_URI:https://www.googleapis.com/oauth2/v3/certs}
+        audience: ${GOOGLE_PLAY_RTDN_AUDIENCE:}
+        service-account-email: ${GOOGLE_PLAY_RTDN_SERVICE_ACCOUNT_EMAIL:}
   limited-benefit:
     admob:
       keys-url: ${ADMOB_SSV_KEYS_URL:https://www.gstatic.com/admob/reward/verifier-keys.json}

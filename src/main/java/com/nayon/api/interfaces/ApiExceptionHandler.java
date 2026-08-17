@@ -21,6 +21,9 @@ import com.nayon.api.share.EconomyNotBootstrappedForShareException;
 import com.nayon.api.share.ShareRequiredException;
 import com.nayon.api.store.StoreConfigurationException;
 import com.nayon.api.store.StorePurchaseException;
+import com.nayon.api.subscription.SubscriptionException;
+import com.nayon.api.subscription.rtdn.GooglePlayRtdnException;
+import com.nayon.api.levelreward.LevelRewardException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -73,6 +76,54 @@ public class ApiExceptionHandler {
                     HttpStatus.UNPROCESSABLE_ENTITY;
             case "GOOGLE_PLAY_RATE_LIMITED" -> HttpStatus.TOO_MANY_REQUESTS;
             default -> HttpStatus.SERVICE_UNAVAILABLE;
+        };
+        return error(status, exception.code(), exception.getMessage());
+    }
+
+    @ExceptionHandler(SubscriptionException.class)
+    ResponseEntity<ApiError> subscription(SubscriptionException exception) {
+        HttpStatus status = switch (exception.code()) {
+            case "SUBSCRIPTION_PRODUCT_NOT_FOUND", "SUBSCRIPTION_NOT_FOUND",
+                 "SUBSCRIPTION_VERIFICATION_NOT_FOUND",
+                 "GOOGLE_PLAY_SUBSCRIPTION_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+            case "SUBSCRIPTION_IDEMPOTENCY_CONFLICT",
+                 "SUBSCRIPTION_PURCHASE_TOKEN_CONFLICT",
+                 "SUBSCRIPTION_VERIFICATION_IN_PROGRESS",
+                 "SUBSCRIPTION_REWARD_IDEMPOTENCY_CONFLICT",
+                 "ECONOMY_NOT_BOOTSTRAPPED" -> HttpStatus.CONFLICT;
+            case "GOOGLE_PLAY_SUBSCRIPTION_PRODUCT_MISMATCH",
+                 "GOOGLE_PLAY_SUBSCRIPTION_ACCOUNT_MISMATCH",
+                 "SUBSCRIPTION_REQUIRED" ->
+                    HttpStatus.UNPROCESSABLE_ENTITY;
+            case "GOOGLE_PLAY_RATE_LIMITED" -> HttpStatus.TOO_MANY_REQUESTS;
+            default -> HttpStatus.SERVICE_UNAVAILABLE;
+        };
+        return error(status, exception.code(), exception.getMessage());
+    }
+
+    @ExceptionHandler(GooglePlayRtdnException.class)
+    ResponseEntity<ApiError> googlePlayRtdn(GooglePlayRtdnException exception) {
+        HttpStatus status = switch (exception.code()) {
+            case "GOOGLE_PLAY_RTDN_UNAUTHORIZED" -> HttpStatus.UNAUTHORIZED;
+            case "GOOGLE_PLAY_RTDN_FORBIDDEN" -> HttpStatus.FORBIDDEN;
+            case "GOOGLE_PLAY_RATE_LIMITED" -> HttpStatus.TOO_MANY_REQUESTS;
+            case "GOOGLE_PLAY_RTDN_INVALID",
+                 "GOOGLE_PLAY_RTDN_PACKAGE_MISMATCH" -> HttpStatus.BAD_REQUEST;
+            default -> HttpStatus.SERVICE_UNAVAILABLE;
+        };
+        return error(status, exception.code(), exception.getMessage());
+    }
+
+    @ExceptionHandler(LevelRewardException.class)
+    ResponseEntity<ApiError> levelReward(LevelRewardException exception) {
+        HttpStatus status = switch (exception.code()) {
+            case "LEVEL_REWARD_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+            case "LEVEL_REWARD_IDEMPOTENCY_CONFLICT",
+                 "ECONOMY_NOT_BOOTSTRAPPED" -> HttpStatus.CONFLICT;
+            case "LEVEL_REWARD_LEVEL_REQUIRED",
+                 "LEVEL_REWARD_SUBSCRIPTION_REQUIRED" ->
+                    HttpStatus.UNPROCESSABLE_ENTITY;
+            default -> HttpStatus.CONFLICT;
         };
         return error(status, exception.code(), exception.getMessage());
     }

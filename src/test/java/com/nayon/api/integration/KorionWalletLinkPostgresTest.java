@@ -57,7 +57,7 @@ class KorionWalletLinkPostgresTest {
                 + "battle_anomalies, battle_completions, battle_sessions, player_progression, "
                 + "gacha_draw_results, gacha_draws, gacha_pity_states, economy_bootstraps, "
                 + "economy_ledger, player_equipment, player_items, player_wallets, save_imports, "
-                + "player_save_states, auth_identities, player_accounts");
+                + "player_save_states, auth_identities, player_accounts cascade");
     }
 
     @Test
