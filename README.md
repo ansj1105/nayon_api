@@ -40,5 +40,22 @@ The source contract is `src/main/resources/openapi/nayon-api-v1.yaml`.
 - `POST /api/v1/save/import`
 - `POST /api/v1/offline-battles/sync`
 - `POST /api/v1/offline-battles`
+- `GET /api/v1/store/catalog?platform=GOOGLE_PLAY`
+- `POST /api/v1/store/purchases/google-play/verify`
 
 All game endpoints require a Cognito Bearer access token. `GET /actuator/health` and `GET /actuator/info` are public.
+
+## Google Play one-time products
+
+The API trusts only Google ProductPurchaseV2 verification. The client does not send a
+price or reward amount, and ledger credit is keyed by the durable purchase receipt.
+Localized display prices must come from Google Play Billing.
+
+Runtime secrets/configuration:
+
+- `STORE_ACCOUNT_HASH_KEY`: random secret used to bind BillingFlow purchases to one NYAON account
+- `GOOGLE_PLAY_PACKAGE_NAME`: Android package (`com.korion.Nayon`)
+- `GOOGLE_PLAY_CREDENTIALS_HOST_FILE`: host path mounted read-only into the API container
+
+Keep the service-account JSON in Secrets Manager/runtime storage only. See
+`docs/google-play-store-setup.md` for Play Console products and DB activation order.

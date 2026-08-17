@@ -51,7 +51,12 @@ services:
       NAYON_AUTH_PROVIDER: ${NAYON_AUTH_PROVIDER:-GOOGLE}
       KORION_WALLET_LINK_BASE_URL: ${KORION_WALLET_LINK_BASE_URL}
       KORION_WALLET_LINK_INTERNAL_API_KEY: ${KORION_WALLET_LINK_INTERNAL_API_KEY}
+      STORE_ACCOUNT_HASH_KEY: ${STORE_ACCOUNT_HASH_KEY:-}
+      GOOGLE_PLAY_PACKAGE_NAME: ${GOOGLE_PLAY_PACKAGE_NAME:-com.korion.Nayon}
+      GOOGLE_PLAY_CREDENTIALS_FILE: /run/secrets/google-play-service-account.json
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+UseSerialGC
+    volumes:
+      - ${GOOGLE_PLAY_CREDENTIALS_HOST_FILE:-/dev/null}:/run/secrets/google-play-service-account.json:ro
     ports:
       - "127.0.0.1:3200:8080"
     depends_on:

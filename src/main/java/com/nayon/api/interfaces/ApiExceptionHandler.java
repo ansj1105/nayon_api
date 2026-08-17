@@ -17,6 +17,8 @@ import com.nayon.api.save.SaveNotFoundException;
 import com.nayon.api.save.SaveRevisionConflictException;
 import com.nayon.api.share.EconomyNotBootstrappedForShareException;
 import com.nayon.api.share.ShareRequiredException;
+import com.nayon.api.store.StoreConfigurationException;
+import com.nayon.api.store.StorePurchaseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -32,6 +34,28 @@ import java.util.UUID;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    @ExceptionHandler(StoreConfigurationException.class)
+    ResponseEntity<ApiError> storeConfiguration(StoreConfigurationException exception) {
+        return error(HttpStatus.SERVICE_UNAVAILABLE,
+                "STORE_NOT_CONFIGURED", exception.getMessage());
+    }
+
+    @ExceptionHandler(StorePurchaseException.class)
+    ResponseEntity<ApiError> storePurchase(StorePurchaseException exception) {
+        HttpStatus status = switch (exception.code()) {
+            case "STORE_PRODUCT_NOT_FOUND", "STORE_PURCHASE_NOT_FOUND",
+                 "GOOGLE_PLAY_PURCHASE_NOT_FOUND" -> HttpStatus.NOT_FOUND;
+            case "STORE_IDEMPOTENCY_CONFLICT", "STORE_PURCHASE_TOKEN_CONFLICT",
+                 "ECONOMY_NOT_BOOTSTRAPPED" -> HttpStatus.CONFLICT;
+            case "GOOGLE_PLAY_PURCHASE_PENDING", "GOOGLE_PLAY_PURCHASE_CANCELLED",
+                 "GOOGLE_PLAY_PRODUCT_MISMATCH", "GOOGLE_PLAY_ACCOUNT_MISMATCH" ->
+                    HttpStatus.UNPROCESSABLE_ENTITY;
+            case "GOOGLE_PLAY_RATE_LIMITED" -> HttpStatus.TOO_MANY_REQUESTS;
+            default -> HttpStatus.SERVICE_UNAVAILABLE;
+        };
+        return error(status, exception.code(), exception.getMessage());
+    }
 
     @ExceptionHandler(LegalDocumentNotFoundException.class)
     ResponseEntity<ApiError> legalDocumentNotFound(LegalDocumentNotFoundException exception) {

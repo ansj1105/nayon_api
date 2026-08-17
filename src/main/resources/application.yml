@@ -24,7 +24,13 @@ nayon:
   korion-wallet-link:
     base-url: ${KORION_WALLET_LINK_BASE_URL:}
     internal-api-key: ${KORION_WALLET_LINK_INTERNAL_API_KEY:}
-
+  store:
+    account-hash-key: ${STORE_ACCOUNT_HASH_KEY:}
+    google-play:
+      package-name: ${GOOGLE_PLAY_PACKAGE_NAME:com.korion.Nayon}
+      credentials-file: ${GOOGLE_PLAY_CREDENTIALS_FILE:}
+      api-base-url: ${GOOGLE_PLAY_API_BASE_URL:https://androidpublisher.googleapis.com}
+      timeout: ${GOOGLE_PLAY_API_TIMEOUT:5s}
 management:
   endpoints:
     web:

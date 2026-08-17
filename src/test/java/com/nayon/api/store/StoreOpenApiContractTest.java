@@ -1,0 +1,29 @@
+package com.nayon.api.store;
+
+import org.junit.jupiter.api.Test;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class StoreOpenApiContractTest {
+
+    @Test
+    void catalogAndGooglePlayVerificationContractStayPublished() throws Exception {
+        String openApi = Files.readString(
+                Path.of("src/main/resources/openapi/nayon-api-v1.yaml"));
+
+        assertThat(openApi)
+                .contains("/store/catalog:")
+                .contains("operationId: getStoreCatalog")
+                .contains("/store/purchases/google-play/verify:")
+                .contains("operationId: verifyGooglePlayPurchase")
+                .contains("StoreCatalogResponse:")
+                .contains("GooglePlayPurchaseVerifyRequest:")
+                .contains("StorePurchaseResponse:")
+                .contains("enum: [PENDING_VERIFICATION, REJECTED, GRANTED]")
+                .doesNotContain("enum: [PENDING_VERIFICATION, REJECTED, GRANTED, CONSUMED]")
+                .contains("$ref: '#/components/parameters/IdempotencyKey'");
+    }
+}

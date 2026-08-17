@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: NYAON API
-  version: 1.4.0
-  description: Social-account-isolated profile, cloud save, economy, gacha, and battle audit API.
+  version: 1.5.0
+  description: Social-account-isolated profile, cloud save, economy, store purchase, gacha, and battle audit API.
 servers:
   - url: /api/v1
 security:
@@ -256,6 +256,69 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           $ref: '#/components/responses/Conflict'
+  /store/catalog:
+    get:
+      operationId: getStoreCatalog
+      description: Returns active server reward mappings. Localized prices remain owned by Google Play.
+      parameters:
+        - name: platform
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [GOOGLE_PLAY]
+      responses:
+        '200':
+          description: Active one-time product catalog for the current account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreCatalogResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /store/purchases/google-play/verify:
+    post:
+      operationId: verifyGooglePlayPurchase
+      description: Verifies an opaque Google purchase token and grants the configured reward at most once.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GooglePlayPurchaseVerifyRequest'
+      responses:
+        '200':
+          description: Existing result for an identical retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorePurchaseResponse'
+        '201':
+          description: Google-verified purchase granted by the authoritative economy ledger
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorePurchaseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /save:
     get:
       operationId: getCloudSave
@@ -638,6 +701,100 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
   schemas:
+    StoreReward:
+      type: object
+      additionalProperties: false
+      required: [assetCode, amount, version]
+      properties:
+        assetCode:
+          type: string
+          enum: [DIAMOND]
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+        version:
+          type: integer
+          minimum: 1
+    StoreCatalogOffer:
+      type: object
+      additionalProperties: false
+      required: [offerCode, productId, productType, reward]
+      properties:
+        offerCode:
+          type: string
+          pattern: '^[a-z][a-z0-9_]{2,63}$'
+        productId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        productType:
+          type: string
+          enum: [ONE_TIME]
+        reward:
+          $ref: '#/components/schemas/StoreReward'
+    StoreCatalogResponse:
+      type: object
+      additionalProperties: false
+      required: [platform, obfuscatedAccountId, offers]
+      properties:
+        platform:
+          type: string
+          enum: [GOOGLE_PLAY]
+        obfuscatedAccountId:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        offers:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoreCatalogOffer'
+    GooglePlayPurchaseVerifyRequest:
+      type: object
+      additionalProperties: false
+      required: [productId, purchaseToken]
+      properties:
+        productId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        purchaseToken:
+          type: string
+          minLength: 1
+          maxLength: 4096
+    StorePurchaseResponse:
+      type: object
+      additionalProperties: false
+      required: [receiptId, state, productId, replay]
+      properties:
+        receiptId:
+          type: string
+          format: uuid
+        state:
+          type: string
+          enum: [PENDING_VERIFICATION, REJECTED, GRANTED]
+        offerCode:
+          type: [string, 'null']
+        productId:
+          type: string
+          minLength: 1
+          maxLength: 200
+        reward:
+          oneOf:
+            - $ref: '#/components/schemas/StoreReward'
+            - type: 'null'
+        totalAssetBalance:
+          type: [integer, 'null']
+          format: int64
+          minimum: 0
+        googleOrderId:
+          type: [string, 'null']
+        grantedAt:
+          type: [string, 'null']
+          format: date-time
+        rejectionCode:
+          type: [string, 'null']
+        replay:
+          type: boolean
     KorionWalletLinkCreateRequest:
       type: object
       additionalProperties: false
