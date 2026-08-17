@@ -120,23 +120,23 @@ Run `git diff --check` and keep the API changes local.
 - Consumes: `store_product_versions.fulfillment_type` values `DIRECT_CURRENCY` and `LIMITED_BENEFIT`, existing verified receipt UUIDs, and the claim endpoint proof body.
 - Produces: paid receipts that are verified exactly once without direct reward, then consumed by exactly one matching daily offer claim.
 
-- [ ] **Step 1: Write RED tests**
+- [x] **Step 1: Write RED tests**
 
 Test that `DIRECT_CURRENCY` is unchanged; `LIMITED_BENEFIT` receipt verification writes `GRANTED` without a standalone ledger credit; wrong account/product/cycle and receipt reuse return `LIMITED_BENEFIT_PROOF_INVALID`; the matching claim grants one bundle.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run the two PostgreSQL test classes; expect the event-fulfillment behavior to fail.
 
-- [ ] **Step 3: Implement receipt discrimination and claim proof checks**
+- [x] **Step 3: Implement receipt discrimination and claim proof checks**
 
 Do not infer an offer by title or price. Join the receipt product UUID to the exact offer mapping and persist the receipt reference on the claim.
 
-- [ ] **Step 4: Run GREEN**
+- [x] **Step 4: Run GREEN**
 
 Run `scripts/verify-postgres-integration.sh`; expect all store and limited-benefit integration tests to pass.
 
-- [ ] **Step 5: Publishing checkpoint**
+- [x] **Step 5: Publishing checkpoint**
 
 Run `git diff --check`; keep changes local.
 
@@ -156,27 +156,27 @@ Run `git diff --check`; keep changes local.
 - Consumes: the original ordered callback URL bytes and Google verifier key ID; account-created ad session UUID in `custom_data`.
 - Produces: `POST .../{offerCode}/ad-sessions`, public `GET /api/v1/public/admob/rewarded-callback`, and verified session proof consumable by claims.
 
-- [ ] **Step 1: Write verifier RED tests**
+- [x] **Step 1: Write verifier RED tests**
 
 Use a test EC key pair to sign an official-format ordered query. Assert valid acceptance plus rejection of altered query, wrong key, wrong ad unit, expired session, duplicate transaction replay, and cross-account session.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run `./gradlew test --tests '*AdMobSsvVerifierTest'`; expect missing verifier/session failures.
 
-- [ ] **Step 3: Implement verification**
+- [x] **Step 3: Implement verification**
 
 Use Java `Signature` with `SHA256withECDSA`, cache Google's public keys with bounded expiry, preserve the substring before `&signature=`, validate exact configured ad metadata, and never grant from the public callback.
 
-- [ ] **Step 4: Implement session/callback persistence and claim consumption**
+- [x] **Step 4: Implement session/callback persistence and claim consumption**
 
 Session creation requires the current unlocked ad offer; callback marks it verified transactionally; authenticated claim consumes it once.
 
-- [ ] **Step 5: Run GREEN**
+- [x] **Step 5: Run GREEN**
 
 Run focused verifier tests and PostgreSQL integration tests with zero failures.
 
-- [ ] **Step 6: Publishing checkpoint**
+- [x] **Step 6: Publishing checkpoint**
 
 Run secret scan and `git diff --check`; no real ad unit or credential belongs in the repository.
 
@@ -195,7 +195,7 @@ Run secret scan and `git diff --check`; no real ad unit or credential belongs in
 - Consumes: campaign/offer DTOs, claim responses, receipt UUID, and ad session DTO.
 - Produces: existing popup rendered entirely from server state, account-scoped cache, safe retry, Play purchase correlation, and SSV ad correlation.
 
-- [ ] **Step 1: Write Unity RED tests**
+- [x] **Step 1: Write Unity RED tests**
 
 Cover JSON routes/models, account cache isolation, server `resetsAt`, disabled provider state, FREE claim request, paid receipt correlation, ad session correlation, and absence of local claim keys/grant invocation.
 
@@ -203,15 +203,15 @@ Cover JSON routes/models, account cache isolation, server `resetsAt`, disabled p
 
 Run Unity EditMode tests on the exact Windows feature SHA; expect missing DTO/synchronizer failures.
 
-- [ ] **Step 3: Implement API client and synchronizer**
+- [x] **Step 3: Implement API client and synchronizer**
 
 Use per-account persisted idempotency only for in-flight claim retries; clear it after authoritative success. Apply response snapshots and server equipment UUIDs through existing bridge helpers.
 
-- [ ] **Step 4: Replace the popup's economic source**
+- [x] **Step 4: Replace the popup's economic source**
 
 Keep prefab/layout code. Remove hard-coded offers, device countdown, `NyaonLimitedBenefit*` keys, and local grants. Bind row buttons by server fulfillment/state.
 
-- [ ] **Step 5: Wire Play and AdMob proof flows**
+- [x] **Step 5: Wire Play and AdMob proof flows**
 
 Reuse `NayonStoreRuntime` for paid products. Configure `ServerSideVerificationOptions` before showing rewarded ads; after client completion, poll/refetch until the server session is verified, then claim.
 
@@ -219,7 +219,7 @@ Reuse `NayonStoreRuntime` for paid products. Configure `ServerSideVerificationOp
 
 Run all Unity EditMode tests, confirm zero compile errors, copy only reviewed source through Git to `C:\work\Nayon_Hunters-develop`, verify identical SHA/files, and reopen Unity 6000.5.6f1.
 
-- [ ] **Step 7: Publishing checkpoint**
+- [x] **Step 7: Publishing checkpoint**
 
 Run `git diff --check`; keep changes local.
 
@@ -232,7 +232,7 @@ Run `git diff --check`; keep changes local.
 - Consumes: Tasks 1-5.
 - Produces: release-ready local evidence without publication.
 
-- [ ] **Step 1: Run full backend checks**
+- [x] **Step 1: Run full backend checks**
 
 ```bash
 bash scripts/verify-v11.sh
@@ -245,10 +245,10 @@ bash scripts/verify-deploy-contract.sh
 
 Run all EditMode tests on Windows Unity 6000.5.6f1 and verify WSL/Windows source byte equality.
 
-- [ ] **Step 3: Review trust-boundary cases**
+- [x] **Step 3: Review trust-boundary cases**
 
 Confirm device clock/PlayerPrefs cannot grant, no client-success fallback exists, receipt/ad proof is exact and account-owned, every bundle is atomic, and provider absence disables instead of granting.
 
-- [ ] **Step 4: Report migration/contract evidence**
+- [x] **Step 4: Report migration/contract evidence**
 
 Report V11 up/down paths and timings, lock risk, rollback trigger, OpenAPI paths/components/DTO/tests, additive compatibility, exact commands, and local-only publication state.

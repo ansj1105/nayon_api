@@ -24,6 +24,8 @@ class StoreOpenApiContractTest {
                 .contains("StoreCatalogResponse:")
                 .contains("GooglePlayPurchaseVerifyRequest:")
                 .contains("StorePurchaseResponse:")
+                .contains("type: [string, 'null']")
+                .contains("enum: [DIRECT_CURRENCY, LIMITED_BENEFIT, null]")
                 .contains("FirstPurchaseRewardResponse:")
                 .contains("enum: [PENDING_VERIFICATION, REJECTED, GRANTED]")
                 .doesNotContain("enum: [PENDING_VERIFICATION, REJECTED, GRANTED, CONSUMED]")

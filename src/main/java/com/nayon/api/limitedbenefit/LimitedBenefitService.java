@@ -1,7 +1,7 @@
 package com.nayon.api.limitedbenefit;
 
-import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -39,8 +39,20 @@ public class LimitedBenefitService {
     @Transactional
     public LimitedBenefitClaimResult claimFree(
             UUID accountId, UUID requestId, String offerCode) {
+        return claim(accountId, requestId, offerCode, null, null);
+    }
+
+    @Transactional
+    public LimitedBenefitClaimResult claim(
+            UUID accountId,
+            UUID requestId,
+            String offerCode,
+            UUID receiptId,
+            UUID adSessionId) {
         Instant now = clock.instant();
         LocalDate cycleDate = now.atZone(CAMPAIGN_ZONE).toLocalDate();
-        return repository.claimFree(accountId, requestId, offerCode, now, cycleDate);
+        return repository.claim(
+                accountId, requestId, offerCode, receiptId, adSessionId,
+                now, cycleDate);
     }
 }

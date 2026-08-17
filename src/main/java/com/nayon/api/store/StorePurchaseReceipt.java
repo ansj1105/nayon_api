@@ -13,8 +13,9 @@ public record StorePurchaseReceipt(
         String productId,
         UUID productVersionId,
         int rewardVersion,
+        String fulfillmentType,
         String rewardAssetCode,
-        long rewardAmount,
+        Long rewardAmount,
         String purchaseToken,
         String googleOrderId,
         Instant googlePurchaseTime,
@@ -27,7 +28,7 @@ public record StorePurchaseReceipt(
     public StorePurchaseReceipt asReplay() {
         return replay ? this : new StorePurchaseReceipt(
                 id, accountId, requestId, requestHash, state, offerCode,
-                productId, productVersionId, rewardVersion, rewardAssetCode,
+                productId, productVersionId, rewardVersion, fulfillmentType, rewardAssetCode,
                 rewardAmount, purchaseToken, googleOrderId, googlePurchaseTime,
                 totalAssetBalance, rejectionCode, lastFailureCode,
                 grantedAt, true);

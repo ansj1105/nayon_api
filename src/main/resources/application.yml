@@ -31,6 +31,12 @@ nayon:
       credentials-file: ${GOOGLE_PLAY_CREDENTIALS_FILE:}
       api-base-url: ${GOOGLE_PLAY_API_BASE_URL:https://androidpublisher.googleapis.com}
       timeout: ${GOOGLE_PLAY_API_TIMEOUT:5s}
+  limited-benefit:
+    admob:
+      keys-url: ${ADMOB_SSV_KEYS_URL:https://www.gstatic.com/admob/reward/verifier-keys.json}
+      keys-cache-duration: ${ADMOB_SSV_KEYS_CACHE_DURATION:12h}
+      reward-item: ${ADMOB_SSV_REWARD_ITEM:nayon_limited_benefit}
+      reward-amount: ${ADMOB_SSV_REWARD_AMOUNT:1}
 management:
   endpoints:
     web:

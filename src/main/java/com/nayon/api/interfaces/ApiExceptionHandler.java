@@ -13,6 +13,7 @@ import com.nayon.api.gacha.InsufficientAssetException;
 import com.nayon.api.korion.KorionWalletLinkException;
 import com.nayon.api.legal.LegalDocumentNotFoundException;
 import com.nayon.api.limitedbenefit.LimitedBenefitException;
+import com.nayon.api.limitedbenefit.admob.AdMobSsvVerificationException;
 import com.nayon.api.save.IdempotencyConflictException;
 import com.nayon.api.save.SaveNotFoundException;
 import com.nayon.api.save.SaveRevisionConflictException;
@@ -36,11 +37,18 @@ import java.util.UUID;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    @ExceptionHandler(AdMobSsvVerificationException.class)
+    ResponseEntity<ApiError> adMobVerification(AdMobSsvVerificationException exception) {
+        return error(HttpStatus.BAD_REQUEST,
+                "ADMOB_SSV_INVALID", exception.getMessage());
+    }
+
     @ExceptionHandler(LimitedBenefitException.class)
     ResponseEntity<ApiError> limitedBenefit(LimitedBenefitException exception) {
         HttpStatus status = switch (exception.code()) {
             case "LIMITED_BENEFIT_OFFER_NOT_FOUND" -> HttpStatus.NOT_FOUND;
-            case "LIMITED_BENEFIT_PROOF_REQUIRED" -> HttpStatus.UNPROCESSABLE_ENTITY;
+            case "LIMITED_BENEFIT_PROOF_REQUIRED", "LIMITED_BENEFIT_PROOF_INVALID" ->
+                    HttpStatus.UNPROCESSABLE_ENTITY;
             case "LIMITED_BENEFIT_PROVIDER_UNAVAILABLE" -> HttpStatus.SERVICE_UNAVAILABLE;
             default -> HttpStatus.CONFLICT;
         };

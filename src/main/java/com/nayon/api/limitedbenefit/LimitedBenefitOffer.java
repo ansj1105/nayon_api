@@ -9,6 +9,7 @@ public record LimitedBenefitOffer(
         int displayOrder,
         String title,
         String fulfillmentType,
+        UUID storeOfferId,
         String productId,
         String state,
         List<LimitedBenefitReward> rewards) {

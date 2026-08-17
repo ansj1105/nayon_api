@@ -11,6 +11,7 @@ public record StorePurchaseResponse(
         String state,
         String offerCode,
         String productId,
+        String fulfillmentType,
         Reward reward,
         Long totalAssetBalance,
         String googleOrderId,
@@ -26,7 +27,8 @@ public record StorePurchaseResponse(
                         receipt.rewardAmount(), receipt.rewardVersion());
         return new StorePurchaseResponse(
                 receipt.id(), receipt.state().name(), receipt.offerCode(),
-                receipt.productId(), reward, receipt.totalAssetBalance(),
+                receipt.productId(), receipt.fulfillmentType(), reward,
+                receipt.totalAssetBalance(),
                 receipt.googleOrderId(), receipt.grantedAt(),
                 receipt.rejectionCode(),
                 result.firstPurchaseReward() == null ? null

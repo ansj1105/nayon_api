@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/v1/legal-documents/**").permitAll()
+                        .requestMatchers("/api/v1/public/admob/rewarded-callback").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(errors -> errors
                         .authenticationEntryPoint(securityErrorWriter)

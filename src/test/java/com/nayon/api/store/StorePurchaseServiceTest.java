@@ -58,7 +58,7 @@ class StorePurchaseServiceTest {
         return new StorePurchaseReceipt(
                 receiptId, accountId, requestId, "a".repeat(64), state,
                 "diamond_100", "nayon.diamond.100", UUID.randomUUID(), 1,
-                "DIAMOND", 100L, "purchase-token", "GPA.test",
+                "DIRECT_CURRENCY", "DIAMOND", 100L, "purchase-token", "GPA.test",
                 Instant.parse("2026-08-17T00:00:00Z"), totalBalance,
                 null, null, state == StorePurchaseState.GRANTED ? Instant.now() : null,
                 false);

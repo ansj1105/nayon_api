@@ -66,11 +66,10 @@ plus one additive fulfillment discriminator on `store_product_versions`.
   - boxes: `ADVANCED_BOX`, `ALL_BOX`
 - positive amount and maximum three reward rows per offer
 
-Box fulfillment never credits a client-side material ID. `ADVANCED_BOX` uses
-the existing advanced gacha distribution for one server-selected equipment;
-`ALL_BOX` uses the existing regular distribution across all equipment types.
-Every selected equipment has a server UUID and is inserted into
-`player_equipment` in the claim transaction.
+Box fulfillment never trusts a client-side quantity. `ADVANCED_BOX` and
+`ALL_BOX` are the game's existing unopened inventory items, so the claim
+transaction credits their canonical `player_items` codes. Opening a box and
+selecting equipment remains a separate server-authoritative operation.
 
 ### `player_limited_benefit_claims`
 
@@ -87,8 +86,8 @@ Every selected equipment has a server UUID and is inserted into
 - an authenticated account creates a short-lived session for one unlocked ad
   offer and receives an opaque session UUID for AdMob `custom_data`
 - callback `transaction_id` is globally unique
-- the raw query, key ID, verification result, account/session correlation, and
-  timestamps are retained for audit
+- accepted raw query, key ID, account/session correlation, and timestamps are
+  retained for audit; rejected callbacks return an error and never affect economy
 - a verified callback marks the session `VERIFIED`; only then may the claim
   transaction grant the offer
 
@@ -176,7 +175,7 @@ diamond products remain `DIRECT_CURRENCY` and are backward compatible.
 - GOOGLE_PLAY reuses `NayonStoreRuntime`, then claims with the receipt UUID.
 - ADMOB_SSV creates a session, assigns `userId/customData`, shows the rewarded
   ad, polls/refetches until the server callback is verified, then claims.
-- Apply only the returned authoritative economy/equipment snapshot. Cache state
+- Apply only the returned authoritative economy/item snapshot. Cache state
   is account-scoped and request-generation guarded.
 - Network failure leaves the offer unclaimed and retryable with the same key.
 
@@ -188,8 +187,9 @@ diamond products remain `DIRECT_CURRENCY` and are backward compatible.
 - Every grant, including all reward rows and equipment instances, is one DB
   transaction followed by durable replay serialization.
 - A claim that partially fails rolls back completely.
-- Rate limits apply per account to catalog, claim, and ad-session creation; the
-  public callback is transaction-deduplicated and independently rate limited.
+- Account locks, exact replay, and one-live-session reuse bound authenticated
+  writes. Before production provider activation, ingress rate limits must also
+  cover catalog, claim, ad-session creation, and the public callback.
 
 ## Tests and release gates
 

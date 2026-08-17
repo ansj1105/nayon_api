@@ -4,6 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nayon.api.economy.EconomyRepository;
 import com.nayon.api.economy.EconomySnapshot;
+import com.nayon.api.limitedbenefit.admob.AdMobRewardCallbackResult;
+import com.nayon.api.limitedbenefit.admob.AdMobSsvCallback;
+import com.nayon.api.limitedbenefit.admob.LimitedBenefitAdSession;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Repository;
@@ -14,6 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -56,7 +60,7 @@ public class JdbcLimitedBenefitRepository {
         CampaignRow campaign = campaigns.getFirst();
         List<OfferRow> rows = jdbc.query("""
                 select o.id, o.offer_code, o.display_order, o.title,
-                       o.fulfillment_type, o.provider_key,
+                       o.fulfillment_type, o.provider_key, o.store_offer_id,
                        (select sp.store_product_id
                           from store_products sp
                          where sp.offer_id = o.store_offer_id
@@ -87,7 +91,7 @@ public class JdbcLimitedBenefitRepository {
             }
             offers.add(new LimitedBenefitOffer(
                     row.id(), row.offerCode(), row.displayOrder(), row.title(),
-                    row.fulfillmentType(), row.productId(), state,
+                    row.fulfillmentType(), row.storeOfferId(), row.productId(), state,
                     rewards.getOrDefault(row.id(), List.of())));
             predecessorClaimed = row.claimed();
         }
@@ -96,10 +100,12 @@ public class JdbcLimitedBenefitRepository {
                 cycleDate, resetsAt, offers));
     }
 
-    public LimitedBenefitClaimResult claimFree(
+    public LimitedBenefitClaimResult claim(
             UUID accountId,
             UUID requestId,
             String offerCode,
+            UUID receiptId,
+            UUID adSessionId,
             Instant now,
             LocalDate cycleDate) {
         if (offerCode == null || !offerCode.matches("^[a-z][a-z0-9_]{2,63}$")) {
@@ -107,7 +113,17 @@ public class JdbcLimitedBenefitRepository {
         }
         lock("limited-benefit-account:" + accountId);
         lock("limited-benefit-request:" + requestId);
-        String requestHash = sha256(offerCode + "\nFREE");
+        if (receiptId != null && adSessionId != null) {
+            throw invalidProof();
+        }
+        String proofType = receiptId != null ? "GOOGLE_PLAY"
+                : adSessionId != null ? "ADMOB_SSV" : "FREE";
+        String requestHash = switch (proofType) {
+            case "FREE" -> sha256(offerCode + "\nFREE");
+            case "GOOGLE_PLAY" -> sha256(
+                    offerCode + "\nGOOGLE_PLAY\n" + receiptId);
+            default -> sha256(offerCode + "\nADMOB_SSV\n" + adSessionId);
+        };
 
         List<StoredClaim> existing = jdbc.query("""
                 select account_id, request_hash, response_payload::text
@@ -138,13 +154,20 @@ public class JdbcLimitedBenefitRepository {
                 .findFirst()
                 .orElseThrow(() -> new LimitedBenefitException(
                         "LIMITED_BENEFIT_OFFER_NOT_FOUND", "Offer was not found."));
-        if (!offer.fulfillmentType().equals("FREE")) {
+        if (!offer.fulfillmentType().equals(proofType)) {
             throw new LimitedBenefitException("LIMITED_BENEFIT_PROOF_REQUIRED",
                     "This offer requires provider proof.");
         }
         if (!offer.state().equals("AVAILABLE")) {
             throw conflict("LIMITED_BENEFIT_OFFER_" + offer.state(),
                     "Offer cannot be claimed in its current state.");
+        }
+        if (proofType.equals("GOOGLE_PLAY")) {
+            validateGoogleReceipt(
+                    accountId, receiptId, offer.storeOfferId(), cycleDate);
+        } else if (proofType.equals("ADMOB_SSV")) {
+            validateAdSession(
+                    accountId, adSessionId, offer.id(), cycleDate);
         }
 
         UUID claimId = UUID.randomUUID();
@@ -153,13 +176,11 @@ public class JdbcLimitedBenefitRepository {
                 economy = economyRepository.creditCurrency(
                         accountId, requestId, reward.code(), reward.amount(),
                         "LIMITED_BENEFIT", "PLAYER_LIMITED_BENEFIT_CLAIM", claimId);
-            } else if (reward.type().equals("ITEM")) {
+            } else if (reward.type().equals("ITEM")
+                    || reward.type().equals("EQUIPMENT_BOX")) {
                 economy = economyRepository.creditItem(
                         accountId, requestId, reward.code(), reward.amount(),
                         "LIMITED_BENEFIT", "PLAYER_LIMITED_BENEFIT_CLAIM", claimId);
-            } else {
-                throw new LimitedBenefitException("LIMITED_BENEFIT_REWARD_UNSUPPORTED",
-                        "Equipment boxes require a verified purchase flow.");
             }
         }
         LimitedBenefitClaimResult result = new LimitedBenefitClaimResult(
@@ -167,11 +188,241 @@ public class JdbcLimitedBenefitRepository {
         jdbc.update("""
                 insert into player_limited_benefit_claims(
                     id, account_id, campaign_version_id, offer_id, cycle_date,
-                    request_id, request_hash, proof_type, response_payload, claimed_at)
-                values (?, ?, ?, ?, ?, ?, ?, 'FREE', ?::jsonb, ?)
+                    request_id, request_hash, proof_type, receipt_id, ad_session_id,
+                    response_payload, claimed_at)
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?)
                 """, claimId, accountId, campaign.campaignVersionId(), offer.id(),
-                cycleDate, requestId, requestHash, writeResult(result), Timestamp.from(now));
+                cycleDate, requestId, requestHash, proofType, receiptId, adSessionId,
+                writeResult(result), Timestamp.from(now));
+        if (proofType.equals("ADMOB_SSV")) {
+            jdbc.update("""
+                    update limited_benefit_ad_sessions
+                       set status = 'CONSUMED', consumed_at = ?
+                     where id = ? and status = 'VERIFIED'
+                    """, Timestamp.from(now), adSessionId);
+        }
         return result;
+    }
+
+    public LimitedBenefitAdSession createAdSession(
+            UUID accountId,
+            String offerCode,
+            Instant now,
+            LocalDate cycleDate) {
+        if (offerCode == null || !offerCode.matches("^[a-z][a-z0-9_]{2,63}$")) {
+            throw new IllegalArgumentException("Invalid limited benefit offer code");
+        }
+        lock("limited-benefit-account:" + accountId);
+        jdbc.update("""
+                update limited_benefit_ad_sessions
+                   set status = 'EXPIRED'
+                 where account_id = ? and status = 'PENDING' and expires_at <= ?
+                """, accountId, Timestamp.from(now));
+        Instant resetsAt = cycleDate.plusDays(1)
+                .atStartOfDay(LimitedBenefitService.CAMPAIGN_ZONE).toInstant();
+        LimitedBenefitCampaign campaign = findCurrent(accountId, now, cycleDate, resetsAt)
+                .orElseThrow(() -> conflict("LIMITED_BENEFIT_NOT_ACTIVE",
+                        "No limited benefit campaign is active."));
+        LimitedBenefitOffer offer = campaign.offers().stream()
+                .filter(value -> value.offerCode().equals(offerCode))
+                .findFirst()
+                .orElseThrow(() -> new LimitedBenefitException(
+                        "LIMITED_BENEFIT_OFFER_NOT_FOUND", "Offer was not found."));
+        if (!offer.fulfillmentType().equals("ADMOB_SSV")) {
+            throw new LimitedBenefitException("LIMITED_BENEFIT_PROOF_REQUIRED",
+                    "This offer is not fulfilled by AdMob.");
+        }
+        if (!offer.state().equals("AVAILABLE") || offer.productId() != null) {
+            throw conflict("LIMITED_BENEFIT_OFFER_" + offer.state(),
+                    "Offer cannot create an ad session in its current state.");
+        }
+        String adUnitId = jdbc.queryForObject(
+                "select provider_key from limited_benefit_offers where id = ?",
+                String.class, offer.id());
+        if (adUnitId == null || adUnitId.isBlank()) {
+            throw new LimitedBenefitException("LIMITED_BENEFIT_PROVIDER_UNAVAILABLE",
+                    "AdMob ad unit is not configured.");
+        }
+        List<LimitedBenefitAdSession> existing = jdbc.query("""
+                select id, ad_unit_id, status, expires_at
+                  from limited_benefit_ad_sessions
+                 where account_id = ? and offer_id = ? and cycle_date = ?
+                   and status in ('PENDING', 'VERIFIED')
+                   and (status = 'VERIFIED' or expires_at > ?)
+                 order by case when status = 'VERIFIED' then 0 else 1 end,
+                          created_at desc limit 1
+                """, (rs, row) -> adSession(
+                        rs.getObject("id", UUID.class), accountId,
+                        rs.getString("ad_unit_id"),
+                        rs.getString("status"),
+                        rs.getTimestamp("expires_at").toInstant()),
+                accountId, offer.id(), cycleDate, Timestamp.from(now));
+        if (!existing.isEmpty()) {
+            return existing.getFirst();
+        }
+        UUID sessionId = UUID.randomUUID();
+        Instant expiresAt = now.plus(Duration.ofMinutes(10));
+        jdbc.update("""
+                insert into limited_benefit_ad_sessions(
+                    id, account_id, campaign_version_id, offer_id, cycle_date,
+                    status, ad_unit_id, expires_at)
+                values (?, ?, ?, ?, ?, 'PENDING', ?, ?)
+                """, sessionId, accountId, campaign.campaignVersionId(), offer.id(),
+                cycleDate, adUnitId, Timestamp.from(expiresAt));
+        return adSession(sessionId, accountId, adUnitId, "PENDING", expiresAt);
+    }
+
+    public AdMobRewardCallbackResult acceptAdMobCallback(
+            AdMobSsvCallback callback,
+            String expectedRewardItem,
+            long expectedRewardAmount,
+            Instant now) {
+        lock("admob-transaction:" + callback.transactionId());
+        List<StoredAdMobCallback> existing = jdbc.query("""
+                select ad_session_id, raw_query, verified
+                  from admob_reward_callbacks where transaction_id = ?
+                """, (rs, row) -> new StoredAdMobCallback(
+                        rs.getObject("ad_session_id", UUID.class),
+                        rs.getString("raw_query"), rs.getBoolean("verified")),
+                callback.transactionId());
+        if (!existing.isEmpty()) {
+            StoredAdMobCallback stored = existing.getFirst();
+            if (stored.verified() && stored.rawQuery().equals(callback.rawQuery())
+                    && stored.sessionId().equals(callback.sessionId())) {
+                return new AdMobRewardCallbackResult(
+                        stored.sessionId(), callback.transactionId(), true);
+            }
+            throw invalidProof();
+        }
+
+        List<AdSessionProof> sessions = jdbc.query("""
+                select account_id, offer_id, cycle_date, status,
+                       ad_unit_id, created_at, expires_at
+                  from limited_benefit_ad_sessions
+                 where id = ? for update
+                """, (rs, row) -> new AdSessionProof(
+                        rs.getObject("account_id", UUID.class),
+                        rs.getObject("offer_id", UUID.class),
+                        rs.getObject("cycle_date", LocalDate.class),
+                        rs.getString("status"), rs.getString("ad_unit_id"),
+                        rs.getTimestamp("created_at").toInstant(),
+                        rs.getTimestamp("expires_at").toInstant()), callback.sessionId());
+        if (sessions.isEmpty()) {
+            throw invalidProof();
+        }
+        AdSessionProof session = sessions.getFirst();
+        if (!session.accountId().equals(callback.accountId())
+                || !session.status().equals("PENDING")
+                || !session.adUnitId().equals(callback.adUnitId())
+                || !expectedRewardItem.equals(callback.rewardItem())
+                || expectedRewardAmount != callback.rewardAmount()
+                || callback.rewardedAt().isBefore(
+                        session.createdAt().minusSeconds(5 * 60))
+                || callback.rewardedAt().isAfter(session.expiresAt())
+                || !now.isBefore(session.expiresAt())) {
+            throw invalidProof();
+        }
+        jdbc.update("""
+                insert into admob_reward_callbacks(
+                    transaction_id, ad_session_id, raw_query, key_id,
+                    verified, received_at)
+                values (?, ?, ?, ?, true, ?)
+                """, callback.transactionId(), callback.sessionId(),
+                callback.rawQuery(), callback.keyId(), Timestamp.from(now));
+        jdbc.update("""
+                update limited_benefit_ad_sessions
+                   set status = 'VERIFIED', verified_at = ?, transaction_id = ?
+                 where id = ? and status = 'PENDING'
+                """, Timestamp.from(now), callback.transactionId(), callback.sessionId());
+        return new AdMobRewardCallbackResult(
+                callback.sessionId(), callback.transactionId(), false);
+    }
+
+    private LimitedBenefitAdSession adSession(
+            UUID sessionId, UUID accountId, String adUnitId,
+            String status, Instant expiresAt) {
+        return new LimitedBenefitAdSession(
+                sessionId, sessionId.toString(), accountId.toString(),
+                adUnitId, status, expiresAt);
+    }
+
+    private void validateAdSession(
+            UUID accountId, UUID adSessionId, UUID offerId, LocalDate cycleDate) {
+        if (adSessionId == null) {
+            throw invalidProof();
+        }
+        List<AdSessionProof> rows = jdbc.query("""
+                select s.account_id, s.offer_id, s.cycle_date, s.status,
+                       s.ad_unit_id, s.created_at, s.expires_at
+                  from limited_benefit_ad_sessions s
+                 where s.id = ? for update
+                """, (rs, row) -> new AdSessionProof(
+                        rs.getObject("account_id", UUID.class),
+                        rs.getObject("offer_id", UUID.class),
+                        rs.getObject("cycle_date", LocalDate.class),
+                        rs.getString("status"), rs.getString("ad_unit_id"),
+                        rs.getTimestamp("created_at").toInstant(),
+                        rs.getTimestamp("expires_at").toInstant()), adSessionId);
+        if (rows.isEmpty()) {
+            throw invalidProof();
+        }
+        AdSessionProof proof = rows.getFirst();
+        if (!proof.accountId().equals(accountId)
+                || !proof.offerId().equals(offerId)
+                || !proof.cycleDate().equals(cycleDate)
+                || !proof.status().equals("VERIFIED")) {
+            throw invalidProof();
+        }
+    }
+
+    private void validateGoogleReceipt(
+            UUID accountId,
+            UUID receiptId,
+            UUID expectedStoreOfferId,
+            LocalDate cycleDate) {
+        if (receiptId == null || expectedStoreOfferId == null) {
+            throw invalidProof();
+        }
+        List<GoogleReceiptProof> rows = jdbc.query("""
+                select r.account_id, r.state, r.fulfillment_type,
+                       r.google_purchase_time, p.offer_id,
+                       exists(select 1 from player_limited_benefit_claims c
+                               where c.receipt_id = r.id) as consumed
+                  from store_purchase_receipts r
+                  join store_products p on p.id = r.product_id
+                 where r.id = ?
+                   for update of r
+                """, (rs, row) -> new GoogleReceiptProof(
+                        rs.getObject("account_id", UUID.class),
+                        rs.getString("state"),
+                        rs.getString("fulfillment_type"),
+                        instant(rs.getTimestamp("google_purchase_time")),
+                        rs.getObject("offer_id", UUID.class),
+                        rs.getBoolean("consumed")), receiptId);
+        if (rows.isEmpty()) {
+            throw invalidProof();
+        }
+        GoogleReceiptProof proof = rows.getFirst();
+        Instant cycleStart = cycleDate.atStartOfDay(
+                LimitedBenefitService.CAMPAIGN_ZONE).toInstant();
+        Instant cycleEnd = cycleDate.plusDays(1).atStartOfDay(
+                LimitedBenefitService.CAMPAIGN_ZONE).toInstant();
+        if (!proof.accountId().equals(accountId)
+                || !proof.state().equals("GRANTED")
+                || !proof.fulfillmentType().equals("LIMITED_BENEFIT")
+                || !proof.storeOfferId().equals(expectedStoreOfferId)
+                || proof.purchaseTime() == null
+                || proof.purchaseTime().isBefore(cycleStart)
+                || !proof.purchaseTime().isBefore(cycleEnd)
+                || proof.consumed()) {
+            throw invalidProof();
+        }
+    }
+
+    private LimitedBenefitException invalidProof() {
+        return new LimitedBenefitException(
+                "LIMITED_BENEFIT_PROOF_INVALID",
+                "Provider proof does not match this account, offer, or cycle.");
     }
 
     private Map<UUID, List<LimitedBenefitReward>> loadRewards(UUID campaignId) {
@@ -206,6 +457,7 @@ public class JdbcLimitedBenefitRepository {
         return new OfferRow(rs.getObject("id", UUID.class), rs.getString("offer_code"),
                 rs.getInt("display_order"), rs.getString("title"),
                 rs.getString("fulfillment_type"), rs.getString("provider_key"),
+                rs.getObject("store_offer_id", UUID.class),
                 rs.getString("product_id"), rs.getBoolean("claimed"));
     }
 
@@ -244,13 +496,26 @@ public class JdbcLimitedBenefitRepository {
         }
     }
 
+    private Instant instant(Timestamp value) {
+        return value == null ? null : value.toInstant();
+    }
+
     private LimitedBenefitException conflict(String code, String message) {
         return new LimitedBenefitException(code, message);
     }
 
     private record CampaignRow(UUID id, String code, int version) { }
     private record OfferRow(UUID id, String offerCode, int displayOrder, String title,
-                            String fulfillmentType, String providerKey, String productId,
-                            boolean claimed) { }
+                            String fulfillmentType, String providerKey, UUID storeOfferId,
+                            String productId, boolean claimed) { }
     private record StoredClaim(UUID accountId, String requestHash, String responsePayload) { }
+    private record GoogleReceiptProof(
+            UUID accountId, String state, String fulfillmentType,
+            Instant purchaseTime, UUID storeOfferId, boolean consumed) { }
+    private record AdSessionProof(
+            UUID accountId, UUID offerId, LocalDate cycleDate,
+            String status, String adUnitId, Instant createdAt,
+            Instant expiresAt) { }
+    private record StoredAdMobCallback(
+            UUID sessionId, String rawQuery, boolean verified) { }
 }

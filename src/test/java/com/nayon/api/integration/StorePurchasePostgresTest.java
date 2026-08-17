@@ -126,6 +126,36 @@ class StorePurchasePostgresTest {
     }
 
     @Test
+    void limitedBenefitPurchaseVerifiesWithoutDirectStoreCredit() {
+        PlayerAccount account = bootstrappedAccount("store-limited-benefit");
+        String productId = "nayon.limited.3000.a";
+        configureLimitedBenefitProduct(productId, "limited_paid_3000_a");
+        gateway.enqueue(purchased(account, productId,
+                Instant.parse("2026-08-17T01:00:00Z")));
+
+        StorePurchaseResult result = service.verify(
+                account.id(), UUID.randomUUID(),
+                new StorePurchaseCommand(productId, "token-limited-benefit"));
+
+        assertThat(result.receipt().state()).isEqualTo(StorePurchaseState.GRANTED);
+        assertThat(result.receipt().fulfillmentType()).isEqualTo("LIMITED_BENEFIT");
+        assertThat(result.receipt().rewardAssetCode()).isNull();
+        assertThat(result.receipt().rewardAmount()).isNull();
+        assertThat(result.receipt().totalAssetBalance()).isNull();
+        assertThat(jdbc.queryForObject("""
+                select count(*)
+                  from store_product_versions
+                 where product_id = (select id from store_products
+                                      where store_product_id = ?)
+                   and fulfillment_type = 'LIMITED_BENEFIT'
+                """, Long.class, productId)).isEqualTo(1L);
+        assertThat(jdbc.queryForObject("""
+                select count(*) from economy_ledger
+                 where account_id = ? and reason_code = 'STORE_PURCHASE'
+                """, Long.class, account.id())).isZero();
+    }
+
+    @Test
     void laterPurchaseDoesNotReturnOrGrantFirstPurchaseRewardAgain() {
         PlayerAccount account = bootstrappedAccount("store-later-purchase");
         gateway.enqueue(purchased(account));
@@ -364,10 +394,16 @@ class StorePurchasePostgresTest {
     }
 
     private GooglePlayPurchase purchased(PlayerAccount account) {
+        return purchased(account, "nayon.diamond.100",
+                Instant.parse("2026-08-17T00:00:00Z"));
+    }
+
+    private GooglePlayPurchase purchased(
+            PlayerAccount account, String productId, Instant purchaseTime) {
         return new GooglePlayPurchase(
-                List.of("nayon.diamond.100"), GooglePlayPurchaseState.PURCHASED,
+                List.of(productId), GooglePlayPurchaseState.PURCHASED,
                 "GPA.test-order", accountHasher.hash(account.id()),
-                Instant.parse("2026-08-17T00:00:00Z"), false);
+                purchaseTime, false);
     }
 
     private StorePurchaseCommand command(String token) {
@@ -389,6 +425,23 @@ class StorePurchasePostgresTest {
                 values (?, ?, 1, 'CURRENCY', 'DIAMOND', 100,
                         '2026-01-01T00:00:00Z', true)
                 """, UUID.randomUUID(), productId);
+    }
+
+    private void configureLimitedBenefitProduct(String productId, String offerCode) {
+        UUID configuredProductId = UUID.randomUUID();
+        jdbc.update("""
+                insert into store_products(
+                    id, offer_id, platform, store_product_id, product_type, active)
+                select ?, id, 'GOOGLE_PLAY', ?, 'ONE_TIME', true
+                  from store_offers where offer_code = ?
+                """, configuredProductId, productId, offerCode);
+        jdbc.update("""
+                insert into store_product_versions(
+                    id, product_id, version, reward_asset_type, reward_asset_code,
+                    reward_amount, fulfillment_type, valid_from, active)
+                values (?, ?, 1, null, null, null, 'LIMITED_BENEFIT',
+                        '2026-01-01T00:00:00Z', true)
+                """, UUID.randomUUID(), configuredProductId);
     }
 
     @TestConfiguration

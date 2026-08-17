@@ -20,7 +20,8 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
     private static final String SELECT = """
             select r.id, r.account_id, r.request_id, r.request_hash, r.state,
                    o.offer_code, r.store_product_id, r.product_version_id,
-                   v.version as reward_version, v.reward_asset_code,
+                   v.version as reward_version, r.fulfillment_type,
+                   v.reward_asset_code,
                    v.reward_amount, r.purchase_token, r.google_order_id,
                    r.google_purchase_time, r.total_asset_balance,
                    r.rejection_code, r.last_failure_code,
@@ -126,7 +127,8 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
             return receipt.asReplay();
         }
         List<RewardVersion> versions = jdbc.query("""
-                select v.id, v.version, v.reward_asset_code, v.reward_amount
+                select v.id, v.version, v.fulfillment_type,
+                       v.reward_asset_code, v.reward_amount
                   from store_purchase_receipts r
                   join store_product_versions v on v.product_id = r.product_id
                  where r.id = ?
@@ -136,7 +138,9 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
                  limit 2
                 """, (rs, rowNumber) -> new RewardVersion(
                 rs.getObject("id", UUID.class), rs.getInt("version"),
-                rs.getString("reward_asset_code"), rs.getLong("reward_amount")),
+                rs.getString("fulfillment_type"),
+                rs.getString("reward_asset_code"),
+                rs.getObject("reward_amount", Long.class)),
                 receiptId, timestamp(purchase.purchaseTime()),
                 timestamp(purchase.purchaseTime()));
         if (versions.size() != 1) {
@@ -151,15 +155,18 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
                     "ECONOMY_NOT_BOOTSTRAPPED",
                     "Account economy must be bootstrapped before purchase grant.");
         }
-        EconomySnapshot economy = economyRepository.creditCurrency(
-                accountId,
-                receipt.requestId(),
-                version.rewardAssetCode(),
-                version.rewardAmount(),
-                "STORE_PURCHASE",
-                "STORE_PURCHASE_RECEIPT",
-                receipt.id());
-        long total = economy.currencies().getOrDefault(version.rewardAssetCode(), 0L);
+        Long total = null;
+        if (version.fulfillmentType().equals("DIRECT_CURRENCY")) {
+            EconomySnapshot economy = economyRepository.creditCurrency(
+                    accountId,
+                    receipt.requestId(),
+                    version.rewardAssetCode(),
+                    version.rewardAmount(),
+                    "STORE_PURCHASE",
+                    "STORE_PURCHASE_RECEIPT",
+                    receipt.id());
+            total = economy.currencies().getOrDefault(version.rewardAssetCode(), 0L);
+        }
         firstPurchaseRewardRepository.grantIfAbsent(
                 accountId, receipt.id(), receipt.requestId(), purchase.purchaseTime());
         Instant now = Instant.now();
@@ -168,6 +175,7 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
                    set state = 'GRANTED', google_order_id = ?,
                        google_purchase_time = ?, verified_at = now(),
                        product_version_id = ?,
+                       fulfillment_type = ?,
                        reward_asset_code = ?, reward_amount = ?,
                        total_asset_balance = ?, rejection_code = null,
                        last_failure_code = null, granted_at = ?,
@@ -175,7 +183,8 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
                        verification_attempts = verification_attempts + 1
                  where id = ?
                 """, purchase.orderId(), timestamp(purchase.purchaseTime()),
-                version.id(), version.rewardAssetCode(), version.rewardAmount(), total,
+                version.id(), version.fulfillmentType(), version.rewardAssetCode(),
+                version.rewardAmount(), total,
                 Timestamp.from(now), receiptId);
         return query(" where r.id = ?", receiptId).getFirst();
     }
@@ -221,8 +230,9 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
                 rs.getString("store_product_id"),
                 rs.getObject("product_version_id", UUID.class),
                 rs.getInt("reward_version"),
+                rs.getString("fulfillment_type"),
                 rs.getString("reward_asset_code"),
-                rs.getLong("reward_amount"),
+                rs.getObject("reward_amount", Long.class),
                 rs.getString("purchase_token"),
                 rs.getString("google_order_id"),
                 instant(rs.getTimestamp("google_purchase_time")),
@@ -249,7 +259,8 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
     private record RewardVersion(
             UUID id,
             int version,
+            String fulfillmentType,
             String rewardAssetCode,
-            long rewardAmount) {
+            Long rewardAmount) {
     }
 }

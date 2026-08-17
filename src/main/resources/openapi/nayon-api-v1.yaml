@@ -708,6 +708,43 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /events/limited-benefits/offers/{offerCode}/ad-sessions:
+    post:
+      operationId: createLimitedBenefitAdSession
+      parameters:
+        - name: offerCode
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '201':
+          description: Pending account-scoped AdMob SSV session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LimitedBenefitAdSessionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /public/admob/rewarded-callback:
+    get:
+      operationId: acceptAdMobRewardedCallback
+      security: []
+      description: Validates the original ordered AdMob SSV query and marks its session verified without granting economy.
+      responses:
+        '200':
+          description: Callback accepted or exact transaction replay accepted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
 components:
   securitySchemes:
     bearerAuth:
@@ -809,6 +846,7 @@ components:
         amount: { type: integer, format: int64, minimum: 1 }
     LimitedBenefitClaimRequest:
       type: object
+      description: FREE는 빈 본문, GOOGLE_PLAY는 receiptId, ADMOB_SSV는 adSessionId만 전달한다.
       properties:
         receiptId: { type: [string, 'null'], format: uuid }
         adSessionId: { type: [string, 'null'], format: uuid }
@@ -824,6 +862,19 @@ components:
           items: { $ref: '#/components/schemas/LimitedBenefitReward' }
         economy: { $ref: '#/components/schemas/EconomyResponse' }
         replay: { type: boolean }
+    LimitedBenefitAdSessionResponse:
+      type: object
+      additionalProperties: false
+      required: [sessionId, customData, userId, adUnitId, status, expiresAt]
+      properties:
+        sessionId: { type: string, format: uuid }
+        customData: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        adUnitId: { type: string, minLength: 1 }
+        status:
+          type: string
+          enum: [PENDING, VERIFIED]
+        expiresAt: { type: string, format: date-time }
     StoreReward:
       type: object
       additionalProperties: false
@@ -887,7 +938,7 @@ components:
     StorePurchaseResponse:
       type: object
       additionalProperties: false
-      required: [receiptId, state, productId, replay]
+      required: [receiptId, state, productId, fulfillmentType, replay]
       properties:
         receiptId:
           type: string
@@ -901,6 +952,9 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+        fulfillmentType:
+          type: [string, 'null']
+          enum: [DIRECT_CURRENCY, LIMITED_BENEFIT, null]
         reward:
           oneOf:
             - $ref: '#/components/schemas/StoreReward'

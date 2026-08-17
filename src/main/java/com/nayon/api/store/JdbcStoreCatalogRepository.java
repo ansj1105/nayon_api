@@ -26,6 +26,7 @@ public class JdbcStoreCatalogRepository implements StoreCatalogRepository {
                    and p.active
                    and p.platform = ?
                    and v.active
+                   and v.fulfillment_type = 'DIRECT_CURRENCY'
                    and v.valid_from <= now()
                    and (v.valid_until is null or v.valid_until > now())
                  order by o.display_order, o.offer_code
