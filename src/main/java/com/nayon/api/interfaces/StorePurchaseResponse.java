@@ -16,6 +16,7 @@ public record StorePurchaseResponse(
         String googleOrderId,
         Instant grantedAt,
         String rejectionCode,
+        FirstPurchaseRewardResponse firstPurchaseReward,
         boolean replay) {
 
     public static StorePurchaseResponse from(StorePurchaseResult result) {
@@ -27,7 +28,10 @@ public record StorePurchaseResponse(
                 receipt.id(), receipt.state().name(), receipt.offerCode(),
                 receipt.productId(), reward, receipt.totalAssetBalance(),
                 receipt.googleOrderId(), receipt.grantedAt(),
-                receipt.rejectionCode(), result.replay());
+                receipt.rejectionCode(),
+                result.firstPurchaseReward() == null ? null
+                        : FirstPurchaseRewardResponse.from(result.firstPurchaseReward()),
+                result.replay());
     }
 
     public record Reward(String assetCode, long amount, int version) {

@@ -67,7 +67,7 @@ class StorePurchasePostgresTest {
 
     @BeforeEach
     void cleanDatabase() {
-        jdbc.execute("truncate table store_purchase_receipts, store_product_versions, "
+        jdbc.execute("truncate table player_first_purchase_rewards, store_purchase_receipts, store_product_versions, "
                 + "store_products, player_account_link_rewards, player_korion_wallet_links, "
                 + "korion_wallet_link_requests, player_share_rewards, player_settings, "
                 + "offline_battle_decisions, offline_battle_runs, offline_battle_submissions, "
@@ -76,6 +76,13 @@ class StorePurchasePostgresTest {
                 + "gacha_draw_results, gacha_draws, gacha_pity_states, economy_bootstraps, "
                 + "economy_ledger, player_equipment, player_items, player_wallets, save_imports, "
                 + "player_save_states, auth_identities, player_accounts");
+        jdbc.update("delete from first_purchase_reward_versions where version <> 1");
+        jdbc.update("""
+                update first_purchase_reward_versions
+                   set active = true, valid_until = null,
+                       diamond_amount = 50, gold_amount = 10000
+                 where version = 1
+                """);
         gateway.clear();
         configureProduct();
     }
@@ -94,6 +101,9 @@ class StorePurchasePostgresTest {
 
         assertThat(first.receipt().state()).isEqualTo(StorePurchaseState.GRANTED);
         assertThat(first.receipt().totalAssetBalance()).isEqualTo(200L);
+        assertThat(first.firstPurchaseReward()).isNotNull();
+        assertThat(sameKey.firstPurchaseReward()).isNotNull();
+        assertThat(newKey.firstPurchaseReward()).isNotNull();
         assertThat(sameKey.replay()).isTrue();
         assertThat(newKey.replay()).isTrue();
         assertThat(gateway.getCalls).isEqualTo(1);
@@ -101,6 +111,75 @@ class StorePurchasePostgresTest {
                 select count(*) from economy_ledger
                  where account_id = ? and reason_code = 'STORE_PURCHASE'
                 """, Long.class, account.id())).isEqualTo(1L);
+        assertThat(jdbc.queryForObject("""
+                select count(*) from player_first_purchase_rewards
+                 where account_id = ? and qualifying_receipt_id = ?
+                """, Long.class, account.id(), first.receipt().id())).isEqualTo(1L);
+        assertThat(jdbc.queryForObject("""
+                select count(*) from economy_ledger
+                 where account_id = ? and reason_code = 'FIRST_PURCHASE_REWARD'
+                """, Long.class, account.id())).isEqualTo(2L);
+        assertThat(jdbc.queryForObject("""
+                select count(*) from player_equipment
+                 where account_id = ? and source_type = 'FIRST_PURCHASE_REWARD'
+                """, Long.class, account.id())).isEqualTo(1L);
+    }
+
+    @Test
+    void laterPurchaseDoesNotReturnOrGrantFirstPurchaseRewardAgain() {
+        PlayerAccount account = bootstrappedAccount("store-later-purchase");
+        gateway.enqueue(purchased(account));
+        gateway.enqueue(purchased(account));
+
+        StorePurchaseResult first = service.verify(
+                account.id(), UUID.randomUUID(), command("token-first"));
+        StorePurchaseResult later = service.verify(
+                account.id(), UUID.randomUUID(), command("token-later"));
+
+        assertThat(first.firstPurchaseReward()).isNotNull();
+        assertThat(later.firstPurchaseReward()).isNull();
+        assertThat(jdbc.queryForObject("""
+                select count(*) from player_first_purchase_rewards where account_id = ?
+                """, Long.class, account.id())).isEqualTo(1L);
+        assertThat(jdbc.queryForObject("""
+                select count(*) from economy_ledger
+                 where account_id = ? and reason_code = 'FIRST_PURCHASE_REWARD'
+                """, Long.class, account.id())).isEqualTo(2L);
+    }
+
+    @Test
+    void concurrentDifferentPurchasesGrantOneFirstPurchaseBundle() throws Exception {
+        PlayerAccount account = bootstrappedAccount("store-concurrent-first-bundle");
+        GooglePlayPurchase purchase = purchased(account);
+        gateway.enqueue(purchase);
+        gateway.enqueue(purchase);
+        Callable<StorePurchaseResult> first = () -> service.verify(
+                account.id(), UUID.randomUUID(), command("token-bundle-a"));
+        Callable<StorePurchaseResult> second = () -> service.verify(
+                account.id(), UUID.randomUUID(), command("token-bundle-b"));
+
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            executor.invokeAll(List.of(first, second)).forEach(future -> {
+                try {
+                    assertThat(future.get().receipt().state())
+                            .isEqualTo(StorePurchaseState.GRANTED);
+                } catch (Exception exception) {
+                    throw new AssertionError(exception);
+                }
+            });
+        }
+
+        assertThat(jdbc.queryForObject("""
+                select count(*) from player_first_purchase_rewards where account_id = ?
+                """, Long.class, account.id())).isEqualTo(1L);
+        assertThat(jdbc.queryForObject("""
+                select count(*) from player_equipment
+                 where account_id = ? and source_type = 'FIRST_PURCHASE_REWARD'
+                """, Long.class, account.id())).isEqualTo(1L);
+        assertThat(jdbc.queryForObject("""
+                select count(*) from economy_ledger
+                 where account_id = ? and reason_code = 'FIRST_PURCHASE_REWARD'
+                """, Long.class, account.id())).isEqualTo(2L);
     }
 
     @Test
@@ -198,6 +277,19 @@ class StorePurchasePostgresTest {
                 values (?, ?, 2, 'CURRENCY', 'DIAMOND', 120,
                         '2026-08-18T00:00:00Z', true)
                 """, UUID.randomUUID(), productId);
+        jdbc.update("""
+                update first_purchase_reward_versions
+                   set active = false,
+                       valid_until = '2026-08-18T00:00:00Z'
+                 where version = 1
+                """);
+        jdbc.update("""
+                insert into first_purchase_reward_versions(
+                    id, version, equipment_catalog_version, equipment_grade,
+                    diamond_amount, gold_amount, valid_from, active)
+                values (?, 2, 'unity-equipment-2026-08-16', 'COMMON',
+                        60, 12000, '2026-08-18T00:00:00Z', true)
+                """, UUID.randomUUID());
         gateway.enqueue(purchased(account));
 
         StorePurchaseResult result = service.verify(
@@ -206,12 +298,20 @@ class StorePurchasePostgresTest {
         assertThat(result.receipt().rewardVersion()).isEqualTo(1);
         assertThat(result.receipt().rewardAmount()).isEqualTo(100L);
         assertThat(result.receipt().totalAssetBalance()).isEqualTo(200L);
+        assertThat(result.firstPurchaseReward().rewardVersion()).isEqualTo(1);
+        assertThat(result.firstPurchaseReward().diamondAmount()).isEqualTo(50L);
     }
 
     @Test
     void authenticatedHttpContractReturnsCatalogAndCreatedPurchase() throws Exception {
         PlayerAccount account = bootstrappedAccount("store-http");
         gateway.enqueue(purchased(account));
+
+        mvc.perform(get("/api/v1/store/first-purchase-reward")
+                        .with(jwt().jwt(token -> token.subject("store-http")
+                                .claim("nayon:provider", "GOOGLE"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("NOT_GRANTED"));
 
         mvc.perform(get("/api/v1/store/catalog")
                         .param("platform", "GOOGLE_PLAY")
@@ -236,7 +336,22 @@ class StorePurchasePostgresTest {
                 .andExpect(jsonPath("$.state").value("GRANTED"))
                 .andExpect(jsonPath("$.reward.amount").value(100))
                 .andExpect(jsonPath("$.totalAssetBalance").value(200))
+                .andExpect(jsonPath("$.firstPurchaseReward.status").value("GRANTED"))
+                .andExpect(jsonPath("$.firstPurchaseReward.rewards.equipment.grade")
+                        .value("COMMON"))
+                .andExpect(jsonPath("$.firstPurchaseReward.rewards.diamond.amount")
+                        .value(50))
+                .andExpect(jsonPath("$.firstPurchaseReward.rewards.gold.amount")
+                        .value(10000))
                 .andExpect(jsonPath("$.replay").value(false));
+
+        mvc.perform(get("/api/v1/store/first-purchase-reward")
+                        .with(jwt().jwt(token -> token.subject("store-http")
+                                .claim("nayon:provider", "GOOGLE"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("GRANTED"))
+                .andExpect(jsonPath("$.rewards.diamond.balance").value(250))
+                .andExpect(jsonPath("$.rewards.gold.balance").value(10000));
     }
 
     private PlayerAccount bootstrappedAccount(String subject) {

@@ -19,9 +19,12 @@ class StoreOpenApiContractTest {
                 .contains("operationId: getStoreCatalog")
                 .contains("/store/purchases/google-play/verify:")
                 .contains("operationId: verifyGooglePlayPurchase")
+                .contains("/store/first-purchase-reward:")
+                .contains("operationId: getFirstPurchaseReward")
                 .contains("StoreCatalogResponse:")
                 .contains("GooglePlayPurchaseVerifyRequest:")
                 .contains("StorePurchaseResponse:")
+                .contains("FirstPurchaseRewardResponse:")
                 .contains("enum: [PENDING_VERIFICATION, REJECTED, GRANTED]")
                 .doesNotContain("enum: [PENDING_VERIFICATION, REJECTED, GRANTED, CONSUMED]")
                 .contains("$ref: '#/components/parameters/IdempotencyKey'");

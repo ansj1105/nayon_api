@@ -25,6 +25,8 @@ class StorePurchaseServiceTest {
         StorePurchaseRepository repository = mock(StorePurchaseRepository.class);
         GooglePlayPurchaseGateway gateway = mock(GooglePlayPurchaseGateway.class);
         StoreAccountHasher accountHasher = mock(StoreAccountHasher.class);
+        FirstPurchaseRewardRepository firstPurchaseRewardRepository =
+                mock(FirstPurchaseRewardRepository.class);
         GooglePlayPurchase purchase = new GooglePlayPurchase(
                 List.of("nayon.diamond.100"), GooglePlayPurchaseState.PURCHASED,
                 "GPA.test", "account-hash", Instant.parse("2026-08-17T00:00:00Z"), false);
@@ -37,7 +39,7 @@ class StorePurchaseServiceTest {
                 .thenReturn(receipt(receiptId, accountId, requestId,
                         StorePurchaseState.GRANTED, 100L));
         StorePurchaseService service = new StorePurchaseService(
-                repository, gateway, accountHasher);
+                repository, gateway, accountHasher, firstPurchaseRewardRepository);
 
         StorePurchaseResult result = service.verify(
                 accountId, requestId,

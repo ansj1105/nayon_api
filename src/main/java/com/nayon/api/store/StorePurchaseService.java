@@ -18,14 +18,17 @@ public class StorePurchaseService {
     private final StorePurchaseRepository repository;
     private final GooglePlayPurchaseGateway gateway;
     private final StoreAccountHasher accountHasher;
+    private final FirstPurchaseRewardRepository firstPurchaseRewardRepository;
 
     public StorePurchaseService(
             StorePurchaseRepository repository,
             GooglePlayPurchaseGateway gateway,
-            StoreAccountHasher accountHasher) {
+            StoreAccountHasher accountHasher,
+            FirstPurchaseRewardRepository firstPurchaseRewardRepository) {
         this.repository = repository;
         this.gateway = gateway;
         this.accountHasher = accountHasher;
+        this.firstPurchaseRewardRepository = firstPurchaseRewardRepository;
     }
 
     public StorePurchaseResult verify(
@@ -42,7 +45,10 @@ public class StorePurchaseService {
                 hash(command.purchaseToken()));
         boolean replay = receipt.replay();
         if (receipt.state() != StorePurchaseState.PENDING_VERIFICATION) {
-            return new StorePurchaseResult(receipt, true);
+            return new StorePurchaseResult(
+                    receipt,
+                    firstPurchaseRewardRepository.findByReceipt(receipt.id()).orElse(null),
+                    true);
         }
         String expectedAccount = accountHasher.hash(accountId);
 
@@ -94,7 +100,10 @@ public class StorePurchaseService {
             repository.markVerificationFailure(receipt.id(), exception.code());
             throw exception;
         }
-        return new StorePurchaseResult(granted, replay || granted.replay());
+        return new StorePurchaseResult(
+                granted,
+                firstPurchaseRewardRepository.findByReceipt(granted.id()).orElse(null),
+                replay || granted.replay());
     }
 
     private void validate(StorePurchaseCommand command) {

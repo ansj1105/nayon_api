@@ -33,12 +33,15 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
 
     private final JdbcTemplate jdbc;
     private final EconomyRepository economyRepository;
+    private final FirstPurchaseRewardRepository firstPurchaseRewardRepository;
 
     public JdbcStorePurchaseRepository(
             JdbcTemplate jdbc,
-            EconomyRepository economyRepository) {
+            EconomyRepository economyRepository,
+            FirstPurchaseRewardRepository firstPurchaseRewardRepository) {
         this.jdbc = jdbc;
         this.economyRepository = economyRepository;
+        this.firstPurchaseRewardRepository = firstPurchaseRewardRepository;
     }
 
     @Override
@@ -157,6 +160,8 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
                 "STORE_PURCHASE_RECEIPT",
                 receipt.id());
         long total = economy.currencies().getOrDefault(version.rewardAssetCode(), 0L);
+        firstPurchaseRewardRepository.grantIfAbsent(
+                accountId, receipt.id(), receipt.requestId(), purchase.purchaseTime());
         Instant now = Instant.now();
         jdbc.update("""
                 update store_purchase_receipts

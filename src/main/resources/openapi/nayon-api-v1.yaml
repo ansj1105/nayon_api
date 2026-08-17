@@ -319,6 +319,19 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /store/first-purchase-reward:
+    get:
+      operationId: getFirstPurchaseReward
+      description: Returns the current account's server-authoritative first Google Play purchase reward state.
+      responses:
+        '200':
+          description: Reward state before or after the account's first verified purchase
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirstPurchaseRewardResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /save:
     get:
       operationId: getCloudSave
@@ -793,8 +806,78 @@ components:
           format: date-time
         rejectionCode:
           type: [string, 'null']
+        firstPurchaseReward:
+          oneOf:
+            - $ref: '#/components/schemas/FirstPurchaseRewardResponse'
+            - type: 'null'
         replay:
           type: boolean
+    FirstPurchaseRewardResponse:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [NOT_GRANTED, GRANTED]
+        qualifyingReceiptId:
+          type: [string, 'null']
+          format: uuid
+        rewardVersion:
+          type: [integer, 'null']
+          minimum: 1
+        equipmentCatalogVersion:
+          type: [string, 'null']
+        rewards:
+          oneOf:
+            - $ref: '#/components/schemas/FirstPurchaseRewards'
+            - type: 'null'
+        economy:
+          oneOf:
+            - $ref: '#/components/schemas/EconomyResponse'
+            - type: 'null'
+        grantedAt:
+          type: [string, 'null']
+          format: date-time
+    FirstPurchaseRewards:
+      type: object
+      additionalProperties: false
+      required: [equipment, diamond, gold]
+      properties:
+        equipment:
+          $ref: '#/components/schemas/FirstPurchaseEquipmentReward'
+        diamond:
+          $ref: '#/components/schemas/FirstPurchaseCurrencyReward'
+        gold:
+          $ref: '#/components/schemas/FirstPurchaseCurrencyReward'
+    FirstPurchaseEquipmentReward:
+      type: object
+      additionalProperties: false
+      required: [id, equipmentCode, grade]
+      properties:
+        id:
+          type: string
+          format: uuid
+        equipmentCode:
+          type: string
+          minLength: 1
+          maxLength: 80
+        grade:
+          type: string
+          enum: [COMMON]
+    FirstPurchaseCurrencyReward:
+      type: object
+      additionalProperties: false
+      required: [amount, balance]
+      properties:
+        amount:
+          type: integer
+          format: int64
+          minimum: 1
+        balance:
+          type: integer
+          format: int64
+          minimum: 0
     KorionWalletLinkCreateRequest:
       type: object
       additionalProperties: false

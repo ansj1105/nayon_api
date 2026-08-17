@@ -19,6 +19,14 @@ public class GachaEngine {
         this.random = random;
     }
 
+    public String catalogVersion() {
+        return catalog.version();
+    }
+
+    public GachaAward drawEquipment(String grade, boolean chroma) {
+        return select(grade, chroma);
+    }
+
     GachaOutcome draw(GachaSpec spec, GachaPity initialPity) {
         if (spec.banner() != GachaBanner.CHROMA_SEASON_01) {
             List<GachaAward> awards = new ArrayList<>();
