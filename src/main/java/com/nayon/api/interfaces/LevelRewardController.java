@@ -4,6 +4,7 @@ import com.nayon.api.account.PlayerAccount;
 import com.nayon.api.levelreward.LevelRewardClaimResult;
 import com.nayon.api.levelreward.LevelRewardService;
 import com.nayon.api.levelreward.LevelRewardTrackCode;
+import com.nayon.api.time.ServerClock;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -23,12 +24,15 @@ public class LevelRewardController {
 
     private final CurrentAccountResolver accountResolver;
     private final LevelRewardService service;
+    private final ServerClock clock;
 
     public LevelRewardController(
             CurrentAccountResolver accountResolver,
-            LevelRewardService service) {
+            LevelRewardService service,
+            ServerClock clock) {
         this.accountResolver = accountResolver;
         this.service = service;
+        this.clock = clock;
     }
 
     @GetMapping
@@ -36,7 +40,7 @@ public class LevelRewardController {
             @AuthenticationPrincipal Jwt jwt) {
         PlayerAccount account = accountResolver.resolve(jwt);
         return LevelRewardResponse.ListResponse.from(
-                service.get(account.id()), Instant.now());
+                service.get(account.id()), clock.now());
     }
 
     @PostMapping("/{trackCode}/{requiredLevel}/claim")

@@ -122,8 +122,9 @@ class ShareRewardContractTest {
                 public ShareRewardState markOpened(UUID accountId, String target) {
                     return states.compute(accountId, (ignored, current) -> current == null
                             ? ShareRewardState.opened(
-                                    accountId, UUID.randomUUID(), target)
-                            : current.open(target));
+                                    accountId, UUID.randomUUID(), target,
+                                    java.time.Instant.now())
+                            : current.open(target, java.time.Instant.now()));
                 }
 
                 @Override
@@ -133,7 +134,8 @@ class ShareRewardContractTest {
 
                 @Override
                 public ShareRewardState markClaimed(UUID accountId) {
-                    ShareRewardState claimed = states.get(accountId).claim();
+                    ShareRewardState claimed = states.get(accountId)
+                            .claim(java.time.Instant.now());
                     states.put(accountId, claimed);
                     return claimed;
                 }

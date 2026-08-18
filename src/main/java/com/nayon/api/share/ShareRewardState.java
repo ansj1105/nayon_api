@@ -21,21 +21,22 @@ public record ShareRewardState(
                 accountId, UUID.randomUUID(), false, false, null, null, null);
     }
 
-    public static ShareRewardState opened(UUID accountId, UUID id, String target) {
+    public static ShareRewardState opened(
+            UUID accountId, UUID id, String target, Instant now) {
         return new ShareRewardState(
-                accountId, id, true, false, Instant.now(), null, target);
+                accountId, id, true, false, now, null, target);
     }
 
-    public ShareRewardState open(String target) {
+    public ShareRewardState open(String target, Instant now) {
         if (shared) {
             return this;
         }
         return new ShareRewardState(
-                accountId, id, true, false, Instant.now(), null, target);
+                accountId, id, true, false, now, null, target);
     }
 
-    public ShareRewardState claim() {
+    public ShareRewardState claim(Instant now) {
         return new ShareRewardState(
-                accountId, id, true, true, sharedAt, Instant.now(), shareTarget);
+                accountId, id, true, true, sharedAt, now, shareTarget);
     }
 }

@@ -1,12 +1,15 @@
 package com.nayon.api.korion;
 
+import com.nayon.api.time.KstGameTimeCalculator;
+import com.nayon.api.time.ServerClock;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -17,12 +20,23 @@ public class KorionWalletLinkService {
     private static final String BASE58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
     private final KorionWalletLinkRepository repository;
     private final KorionWalletGateway gateway;
+    private final KstGameTimeCalculator time;
 
+    @Autowired
     public KorionWalletLinkService(
             KorionWalletLinkRepository repository,
-            KorionWalletGateway gateway) {
+            KorionWalletGateway gateway,
+            KstGameTimeCalculator time) {
         this.repository = repository;
         this.gateway = gateway;
+        this.time = time;
+    }
+
+    KorionWalletLinkService(
+            KorionWalletLinkRepository repository,
+            KorionWalletGateway gateway) {
+        this(repository, gateway,
+                new KstGameTimeCalculator(new ServerClock()));
     }
 
     @Transactional
@@ -55,15 +69,15 @@ public class KorionWalletLinkService {
                 accountId, value.id(), KorionWalletLinkStatus.FAILED,
                 value.expiresAt(), "SUPERSEDED"));
 
-        Instant now = Instant.now();
-        if (repository.countRequestsSince(accountId, now.minus(1, ChronoUnit.MINUTES)) >= 3) {
+        Instant now = time.now().toInstant();
+        if (repository.countRequestsSince(accountId, now.minus(Duration.ofMinutes(1))) >= 3) {
             throw new KorionWalletLinkException(
                     "KORION_WALLET_LINK_RATE_LIMITED",
                     "Too many KORION wallet-link requests.");
         }
 
         UUID requestId = UUID.randomUUID();
-        Instant expiresAt = now.plus(10, ChronoUnit.MINUTES);
+        Instant expiresAt = time.expiresAt(now, Duration.ofMinutes(10)).toInstant();
         KorionWalletLinkRequest local = repository.create(requestId, accountId, address, expiresAt);
         return submitToKorion(local);
     }
@@ -87,7 +101,7 @@ public class KorionWalletLinkService {
             return linkApproved(local, remote.expiresAt());
         }
         KorionWalletLinkStatus status = remote.status() == KorionWalletLinkStatus.PENDING
-                && !remote.expiresAt().isAfter(Instant.now())
+                && time.isExpired(remote.expiresAt())
                 ? KorionWalletLinkStatus.EXPIRED : remote.status();
         KorionWalletLinkRequest updated = repository.finish(
                 local.accountId(), local.id(), status, remote.expiresAt(), null);
@@ -127,7 +141,7 @@ public class KorionWalletLinkService {
         }
         validateRemote(local, remote);
         if (remote.status() != KorionWalletLinkStatus.APPROVED) {
-            if (!remote.expiresAt().isAfter(Instant.now())) {
+            if (time.isExpired(remote.expiresAt())) {
                 local = repository.finish(accountId, requestId, KorionWalletLinkStatus.EXPIRED,
                         remote.expiresAt(), null);
                 return KorionWalletLinkView.request(local, null);
@@ -176,7 +190,7 @@ public class KorionWalletLinkService {
     private KorionWalletLinkRequest expireLocalIfNeeded(KorionWalletLinkRequest request) {
         if (request.status() == KorionWalletLinkStatus.PENDING
                 && !isAmbiguousRequest(request)
-                && !request.expiresAt().isAfter(Instant.now())) {
+                && time.isExpired(request.expiresAt())) {
             return repository.finish(request.accountId(), request.id(),
                     KorionWalletLinkStatus.EXPIRED, request.expiresAt(), null);
         }

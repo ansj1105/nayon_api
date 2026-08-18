@@ -4,6 +4,7 @@ import com.nayon.api.economy.EconomyRepository;
 import com.nayon.api.economy.EconomySnapshot;
 import com.nayon.api.gacha.GachaAward;
 import com.nayon.api.gacha.GachaEngine;
+import com.nayon.api.time.ServerClock;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -34,14 +35,17 @@ public class JdbcFirstPurchaseRewardRepository
     private final JdbcTemplate jdbc;
     private final EconomyRepository economyRepository;
     private final GachaEngine gachaEngine;
+    private final ServerClock clock;
 
     public JdbcFirstPurchaseRewardRepository(
             JdbcTemplate jdbc,
             EconomyRepository economyRepository,
-            GachaEngine gachaEngine) {
+            GachaEngine gachaEngine,
+            ServerClock clock) {
         this.jdbc = jdbc;
         this.economyRepository = economyRepository;
         this.gachaEngine = gachaEngine;
+        this.clock = clock;
     }
 
     @Override
@@ -113,7 +117,7 @@ public class JdbcFirstPurchaseRewardRepository
                 REASON, REFERENCE, rewardId);
         long diamondBalance = economy.currencies().getOrDefault("DIAMOND", 0L);
         long goldBalance = economy.currencies().getOrDefault("GOLD", 0L);
-        Instant grantedAt = Instant.now();
+        Instant grantedAt = clock.now();
 
         jdbc.update("""
                 insert into player_first_purchase_rewards(

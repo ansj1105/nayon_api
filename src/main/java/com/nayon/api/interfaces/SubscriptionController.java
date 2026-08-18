@@ -3,6 +3,7 @@ package com.nayon.api.interfaces;
 import com.nayon.api.account.PlayerAccount;
 import com.nayon.api.subscription.SubscriptionService;
 import com.nayon.api.subscription.SubscriptionVerificationResult;
+import com.nayon.api.time.ServerClock;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,12 +25,15 @@ public class SubscriptionController {
 
     private final CurrentAccountResolver accountResolver;
     private final SubscriptionService service;
+    private final ServerClock clock;
 
     public SubscriptionController(
             CurrentAccountResolver accountResolver,
-            SubscriptionService service) {
+            SubscriptionService service,
+            ServerClock clock) {
         this.accountResolver = accountResolver;
         this.service = service;
+        this.clock = clock;
     }
 
     @GetMapping("/subscriptions/catalog")
@@ -47,7 +51,7 @@ public class SubscriptionController {
     public SubscriptionResponse.ListResponse subscriptions(
             @AuthenticationPrincipal Jwt jwt) {
         PlayerAccount account = accountResolver.resolve(jwt);
-        Instant now = Instant.now();
+        Instant now = clock.now();
         return new SubscriptionResponse.ListResponse(
                 now, service.findAll(account.id()).stream()
                 .map(subscription -> SubscriptionResponse.from(subscription, now))
@@ -63,7 +67,7 @@ public class SubscriptionController {
         SubscriptionVerificationResult result = service.verify(
                 account.id(), requestId, request.productId(), request.purchaseToken());
         SubscriptionResponse.VerifyResponse response =
-                SubscriptionResponse.VerifyResponse.from(result, Instant.now());
+                SubscriptionResponse.VerifyResponse.from(result, clock.now());
         return result.replay()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.status(201).body(response);

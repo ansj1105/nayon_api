@@ -1,6 +1,7 @@
 package com.nayon.api.account;
 
 import com.nayon.api.auth.AuthenticatedIdentity;
+import com.nayon.api.time.ServerClock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,15 +16,24 @@ public class AccountService {
 
     private final AccountRepository repository;
     private final Supplier<UUID> idSupplier;
+    private final ServerClock clock;
 
     @Autowired
-    public AccountService(AccountRepository repository) {
-        this(repository, UUID::randomUUID);
+    public AccountService(AccountRepository repository, ServerClock clock) {
+        this(repository, UUID::randomUUID, clock);
     }
 
     AccountService(AccountRepository repository, Supplier<UUID> idSupplier) {
+        this(repository, idSupplier, new ServerClock());
+    }
+
+    AccountService(
+            AccountRepository repository,
+            Supplier<UUID> idSupplier,
+            ServerClock clock) {
         this.repository = repository;
         this.idSupplier = idSupplier;
+        this.clock = clock;
     }
 
     @Transactional
@@ -39,7 +49,7 @@ public class AccountService {
                 null,
                 null,
                 null,
-                Instant.now());
+                clock.now());
         return repository.resolveOrCreate(identity, proposed);
     }
 

@@ -3,6 +3,7 @@ package com.nayon.api.store;
 import com.nayon.api.economy.EconomyRepository;
 import com.nayon.api.economy.EconomySnapshot;
 import com.nayon.api.store.google.GooglePlayPurchase;
+import com.nayon.api.time.ServerClock;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,14 +36,17 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
     private final JdbcTemplate jdbc;
     private final EconomyRepository economyRepository;
     private final FirstPurchaseRewardRepository firstPurchaseRewardRepository;
+    private final ServerClock clock;
 
     public JdbcStorePurchaseRepository(
             JdbcTemplate jdbc,
             EconomyRepository economyRepository,
-            FirstPurchaseRewardRepository firstPurchaseRewardRepository) {
+            FirstPurchaseRewardRepository firstPurchaseRewardRepository,
+            ServerClock clock) {
         this.jdbc = jdbc;
         this.economyRepository = economyRepository;
         this.firstPurchaseRewardRepository = firstPurchaseRewardRepository;
+        this.clock = clock;
     }
 
     @Override
@@ -169,7 +173,7 @@ public class JdbcStorePurchaseRepository implements StorePurchaseRepository {
         }
         firstPurchaseRewardRepository.grantIfAbsent(
                 accountId, receipt.id(), receipt.requestId(), purchase.purchaseTime());
-        Instant now = Instant.now();
+        Instant now = clock.now();
         jdbc.update("""
                 update store_purchase_receipts
                    set state = 'GRANTED', google_order_id = ?,

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: NYAON API
-  version: 1.7.0
+  version: 1.8.0
   description: Social-account-isolated profile, cloud save, economy, store purchase, subscription, reward, gacha, and battle audit API.
 servers:
   - url: /api/v1
@@ -51,6 +51,65 @@ paths:
                 $ref: '#/components/schemas/PlayerSettingsResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /me/weekly-gift:
+    get:
+      operationId: getWeeklyGift
+      description: Reads the current KST weekly-gift state without recording a login day.
+      responses:
+        '200':
+          description: Current weekly-gift state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyGiftResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /me/weekly-gift/check-in:
+    post:
+      operationId: checkInWeeklyGift
+      description: Idempotently records the current KST login date for the authenticated account.
+      responses:
+        '200':
+          description: Weekly-gift state after check-in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyGiftResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: WEEKLY_GIFT_PERIOD_CHANGED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /me/weekly-gift/claim:
+    post:
+      operationId: claimWeeklyGift
+      description: Claims the configured reward after three distinct KST login dates.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Claimed weekly-gift state or an idempotent replay
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyGiftResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: WEEKLY_GIFT_NOT_ELIGIBLE, WEEKLY_GIFT_ALREADY_CLAIMED, WEEKLY_GIFT_PERIOD_CHANGED, or WEEKLY_GIFT_REWARD_NOT_CONFIGURED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
     patch:
       operationId: patchMySettings
       requestBody:
@@ -1002,6 +1061,46 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
   schemas:
+    WeeklyGiftResponse:
+      type: object
+      additionalProperties: false
+      required: [serverTime, zoneId, weekStart, nextResetAt, loginDays, requiredLoginDays, claimable, claimEnabled, claimed]
+      properties:
+        serverTime:
+          type: string
+          format: date-time
+          example: '2026-08-19T12:00:00+09:00'
+        zoneId:
+          type: string
+          const: Asia/Seoul
+        weekStart:
+          type: string
+          format: date
+          example: '2026-08-17'
+        nextResetAt:
+          type: string
+          format: date-time
+          example: '2026-08-24T00:00:00+09:00'
+        loginDays:
+          type: integer
+          minimum: 0
+          maximum: 7
+        requiredLoginDays:
+          type: integer
+          const: 3
+        claimable:
+          type: boolean
+        claimEnabled:
+          type: boolean
+        claimed:
+          type: boolean
+        reward:
+          type: [object, 'null']
+          additionalProperties: true
+        economy:
+          oneOf:
+            - $ref: '#/components/schemas/EconomyResponse'
+            - type: 'null'
     LimitedBenefitCampaignResponse:
       type: object
       required: [campaignVersionId, campaignCode, version, serverTime, cycleDate, resetsAt, offers]

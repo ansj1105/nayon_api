@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nayon.api.store.StoreConfigurationException;
 import com.nayon.api.subscription.google.GooglePlaySubscription;
+import com.nayon.api.time.ServerClock;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Repository;
@@ -26,18 +27,22 @@ public class JdbcSubscriptionRepository implements SubscriptionRepository {
     private final JdbcTemplate jdbc;
     private final ObjectMapper objectMapper;
     private final SubscriptionRewardRepository rewardRepository;
+    private final ServerClock clock;
 
     public JdbcSubscriptionRepository(
             JdbcTemplate jdbc,
             ObjectMapper objectMapper,
-            SubscriptionRewardRepository rewardRepository) {
+            SubscriptionRewardRepository rewardRepository,
+            ServerClock clock) {
         this.jdbc = jdbc;
         this.objectMapper = objectMapper;
         this.rewardRepository = rewardRepository;
+        this.clock = clock;
     }
 
     @Override
     public SubscriptionCatalog catalog(UUID accountId, String obfuscatedAccountId) {
+        Timestamp now = timestamp(clock.now());
         List<PlanRow> planRows = jdbc.query("""
                 select sp.id, sp.plan_code, sp.reward_track_code,
                        p.store_product_id
@@ -49,30 +54,30 @@ public class JdbcSubscriptionRepository implements SubscriptionRepository {
                    and p.platform = 'GOOGLE_PLAY'
                    and p.product_type = 'SUBSCRIPTION'
                    and pv.fulfillment_type = 'SUBSCRIPTION'
-                   and sp.valid_from <= now()
-                   and (sp.valid_until is null or sp.valid_until > now())
-                   and pv.valid_from <= now()
-                   and (pv.valid_until is null or pv.valid_until > now())
+                   and sp.valid_from <= ?
+                   and (sp.valid_until is null or sp.valid_until > ?)
+                   and pv.valid_from <= ?
+                   and (pv.valid_until is null or pv.valid_until > ?)
                  order by o.display_order, sp.plan_code
                 """, (rs, rowNumber) -> new PlanRow(
                 rs.getObject("id", UUID.class),
                 SubscriptionPlanCode.valueOf(rs.getString("plan_code")),
                 rs.getString("reward_track_code"),
-                rs.getString("store_product_id")));
+                rs.getString("store_product_id")), now, now, now, now);
         Map<UUID, List<SubscriptionBenefit>> benefits = new LinkedHashMap<>();
         if (!planRows.isEmpty()) {
             jdbc.query("""
                     select plan_id, benefit_code, benefit_value, version
                       from subscription_benefit_versions
-                     where active and valid_from <= now()
-                       and (valid_until is null or valid_until > now())
+                     where active and valid_from <= ?
+                       and (valid_until is null or valid_until > ?)
                      order by plan_id, benefit_code
                     """, (RowCallbackHandler) rs -> benefits.computeIfAbsent(
                             rs.getObject("plan_id", UUID.class), ignored -> new ArrayList<>())
                     .add(new SubscriptionBenefit(
                             rs.getString("benefit_code"),
                             rs.getLong("benefit_value"),
-                            rs.getInt("version"))));
+                            rs.getInt("version"))), now, now);
         }
         List<SubscriptionPlan> plans = planRows.stream()
                 .map(row -> new SubscriptionPlan(
@@ -179,7 +184,7 @@ public class JdbcSubscriptionRepository implements SubscriptionRepository {
             if (token.state() != SubscriptionState.PENDING) {
                 SubscriptionRewardGrant initialReward =
                         rewardRepository.grantInitialIfEligible(
-                                accountId, subscriptionId, requestId, Instant.now());
+                                accountId, subscriptionId, requestId, clock.now());
                 SubscriptionVerificationResult replay = result(
                         find(subscriptionId).asReplay(), initialReward, true);
                 insertRequest(requestId, accountId, subscriptionId,
@@ -354,6 +359,7 @@ public class JdbcSubscriptionRepository implements SubscriptionRepository {
     }
 
     private ProductPlan productPlan(String productId) {
+        Timestamp now = timestamp(clock.now());
         List<ProductPlan> rows = jdbc.query("""
                 select sp.id, sp.plan_code
                   from subscription_plans sp
@@ -365,14 +371,14 @@ public class JdbcSubscriptionRepository implements SubscriptionRepository {
                    and p.product_type = 'SUBSCRIPTION'
                    and pv.fulfillment_type = 'SUBSCRIPTION'
                    and p.store_product_id = ?
-                   and sp.valid_from <= now()
-                   and (sp.valid_until is null or sp.valid_until > now())
-                   and pv.valid_from <= now()
-                   and (pv.valid_until is null or pv.valid_until > now())
+                   and sp.valid_from <= ?
+                   and (sp.valid_until is null or sp.valid_until > ?)
+                   and pv.valid_from <= ?
+                   and (pv.valid_until is null or pv.valid_until > ?)
                 """, (rs, rowNumber) -> new ProductPlan(
                 rs.getObject("id", UUID.class),
                 SubscriptionPlanCode.valueOf(rs.getString("plan_code"))),
-                productId);
+                productId, now, now, now, now);
         if (rows.isEmpty()) {
             throw new SubscriptionException(
                     "SUBSCRIPTION_PRODUCT_NOT_FOUND",

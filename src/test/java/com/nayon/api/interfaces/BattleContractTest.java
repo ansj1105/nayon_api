@@ -62,6 +62,10 @@ class BattleContractTest {
                         .content(startRequest()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.replay").value(false))
+                .andExpect(jsonPath("$.startedAt").value(
+                        org.hamcrest.Matchers.endsWith("+09:00")))
+                .andExpect(jsonPath("$.expiresAt").value(
+                        org.hamcrest.Matchers.endsWith("+09:00")))
                 .andReturn().getResponse().getContentAsString();
         UUID battleId = UUID.fromString(
                 new com.fasterxml.jackson.databind.ObjectMapper()

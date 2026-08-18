@@ -1,38 +1,33 @@
 package com.nayon.api.limitedbenefit;
 
+import com.nayon.api.time.KstGameTimeCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class LimitedBenefitService {
-    static final ZoneId CAMPAIGN_ZONE = ZoneId.of("Asia/Seoul");
-
     private final JdbcLimitedBenefitRepository repository;
-    private final Clock clock;
+    private final KstGameTimeCalculator time;
 
     @Autowired
-    public LimitedBenefitService(JdbcLimitedBenefitRepository repository) {
-        this(repository, Clock.systemUTC());
-    }
-
-    LimitedBenefitService(JdbcLimitedBenefitRepository repository, Clock clock) {
+    public LimitedBenefitService(
+            JdbcLimitedBenefitRepository repository,
+            KstGameTimeCalculator time) {
         this.repository = repository;
-        this.clock = clock;
+        this.time = time;
     }
 
     @Transactional(readOnly = true)
     public Optional<LimitedBenefitCampaign> current(UUID accountId) {
-        Instant now = clock.instant();
-        LocalDate cycleDate = now.atZone(CAMPAIGN_ZONE).toLocalDate();
-        Instant resetsAt = cycleDate.plusDays(1).atStartOfDay(CAMPAIGN_ZONE).toInstant();
+        Instant now = time.now().toInstant();
+        LocalDate cycleDate = time.dailyPeriod().periodKey();
+        Instant resetsAt = time.dailyPeriod().endsAt().toInstant();
         return repository.findCurrent(accountId, now, cycleDate, resetsAt);
     }
 
@@ -49,8 +44,8 @@ public class LimitedBenefitService {
             String offerCode,
             UUID receiptId,
             UUID adSessionId) {
-        Instant now = clock.instant();
-        LocalDate cycleDate = now.atZone(CAMPAIGN_ZONE).toLocalDate();
+        Instant now = time.now().toInstant();
+        LocalDate cycleDate = time.dailyPeriod().periodKey();
         return repository.claim(
                 accountId, requestId, offerCode, receiptId, adSessionId,
                 now, cycleDate);

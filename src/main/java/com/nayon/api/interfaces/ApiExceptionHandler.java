@@ -24,6 +24,7 @@ import com.nayon.api.store.StorePurchaseException;
 import com.nayon.api.subscription.SubscriptionException;
 import com.nayon.api.subscription.rtdn.GooglePlayRtdnException;
 import com.nayon.api.levelreward.LevelRewardException;
+import com.nayon.api.weeklygift.WeeklyGiftException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -39,6 +40,14 @@ import java.util.UUID;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    @ExceptionHandler(WeeklyGiftException.class)
+    ResponseEntity<ApiError> weeklyGift(WeeklyGiftException exception) {
+        HttpStatus status = "WEEKLY_GIFT_SERVICE_UNAVAILABLE".equals(exception.code())
+                ? HttpStatus.SERVICE_UNAVAILABLE
+                : HttpStatus.CONFLICT;
+        return error(status, exception.code(), exception.getMessage());
+    }
 
     @ExceptionHandler(AdMobSsvVerificationException.class)
     ResponseEntity<ApiError> adMobVerification(AdMobSsvVerificationException exception) {

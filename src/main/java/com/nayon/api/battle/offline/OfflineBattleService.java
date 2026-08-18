@@ -3,13 +3,13 @@ package com.nayon.api.battle.offline;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nayon.api.battle.BattleStageCatalog;
+import com.nayon.api.time.ServerClock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Clock;
 import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.UUID;
@@ -22,23 +22,15 @@ public class OfflineBattleService {
     private final OfflineBattleEvaluator evaluator;
     private final BattleStageCatalog catalog;
     private final ObjectMapper objectMapper;
-    private final Clock clock;
+    private final ServerClock clock;
 
     @Autowired
     public OfflineBattleService(
             OfflineBattleRepository repository,
             OfflineBattleEvaluator evaluator,
             BattleStageCatalog catalog,
-            ObjectMapper objectMapper) {
-        this(repository, evaluator, catalog, objectMapper, Clock.systemUTC());
-    }
-
-    OfflineBattleService(
-            OfflineBattleRepository repository,
-            OfflineBattleEvaluator evaluator,
-            BattleStageCatalog catalog,
             ObjectMapper objectMapper,
-            Clock clock) {
+            ServerClock clock) {
         this.repository = repository;
         this.evaluator = evaluator;
         this.catalog = catalog;
@@ -48,7 +40,7 @@ public class OfflineBattleService {
 
     @Transactional
     public OfflineBattleWindowResult sync(UUID accountId, UUID requestId) {
-        var now = clock.instant();
+        var now = clock.now();
         return repository.sync(
                 accountId, requestId, hash("offline-window-v1"),
                 now, now.plusSeconds(WINDOW_SECONDS), catalog.configuration());
@@ -62,7 +54,7 @@ public class OfflineBattleService {
         validate(command);
         return repository.submit(
                 accountId, requestId, hash(command), command,
-                evaluator, clock.instant());
+                evaluator, clock.now());
     }
 
     private void validate(OfflineBattleSubmissionCommand command) {

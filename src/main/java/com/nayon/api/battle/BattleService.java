@@ -2,6 +2,7 @@ package com.nayon.api.battle;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nayon.api.time.ServerClock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -9,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Clock;
 import java.util.HexFormat;
 import java.util.UUID;
 
@@ -19,23 +19,15 @@ public class BattleService {
     private final BattleStageCatalog catalog;
     private final BattleAnomalyEvaluator evaluator;
     private final ObjectMapper objectMapper;
-    private final Clock clock;
+    private final ServerClock clock;
 
     @Autowired
     public BattleService(
             BattleRepository repository,
             BattleStageCatalog catalog,
             BattleAnomalyEvaluator evaluator,
-            ObjectMapper objectMapper) {
-        this(repository, catalog, evaluator, objectMapper, Clock.systemUTC());
-    }
-
-    BattleService(
-            BattleRepository repository,
-            BattleStageCatalog catalog,
-            BattleAnomalyEvaluator evaluator,
             ObjectMapper objectMapper,
-            Clock clock) {
+            ServerClock clock) {
         this.repository = repository;
         this.catalog = catalog;
         this.evaluator = evaluator;
@@ -50,7 +42,7 @@ public class BattleService {
         BattleStageLimit stage = catalog.require(command.stageCode());
         return repository.start(
                 accountId, requestId, hash(command), command, stage,
-                catalog.configuration(), clock.instant());
+                catalog.configuration(), clock.now());
     }
 
     @Transactional
@@ -62,7 +54,7 @@ public class BattleService {
         validateCompletion(command);
         return repository.complete(
                 accountId, battleId, requestId, hash(command), command,
-                evaluator, catalog.configuration(), clock.instant());
+                evaluator, catalog.configuration(), clock.now());
     }
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)

@@ -7,6 +7,7 @@ import com.nayon.api.economy.EconomyRepository;
 import com.nayon.api.economy.EconomySnapshot;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,8 +77,9 @@ class ShareRewardServiceTest {
         @Override
         public ShareRewardState markOpened(UUID accountId, String target) {
             return states.compute(accountId, (ignored, current) -> current == null
-                    ? ShareRewardState.opened(accountId, UUID.randomUUID(), target)
-                    : current.open(target));
+                    ? ShareRewardState.opened(
+                            accountId, UUID.randomUUID(), target, Instant.now())
+                    : current.open(target, Instant.now()));
         }
 
         @Override
@@ -87,7 +89,7 @@ class ShareRewardServiceTest {
 
         @Override
         public ShareRewardState markClaimed(UUID accountId) {
-            ShareRewardState claimed = states.get(accountId).claim();
+            ShareRewardState claimed = states.get(accountId).claim(Instant.now());
             states.put(accountId, claimed);
             return claimed;
         }

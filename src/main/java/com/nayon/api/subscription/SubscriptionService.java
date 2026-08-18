@@ -4,6 +4,7 @@ import com.nayon.api.store.StoreAccountHasher;
 import com.nayon.api.store.google.GooglePlayGatewayException;
 import com.nayon.api.subscription.google.GooglePlaySubscription;
 import com.nayon.api.subscription.google.GooglePlaySubscriptionGateway;
+import com.nayon.api.time.ServerClock;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -22,14 +23,18 @@ public class SubscriptionService {
     private final SubscriptionRepository repository;
     private final GooglePlaySubscriptionGateway gateway;
     private final StoreAccountHasher accountHasher;
-    private final Clock clock;
+    private final ServerClock clock;
 
     @Autowired
     public SubscriptionService(
             SubscriptionRepository repository,
             GooglePlaySubscriptionGateway gateway,
-            StoreAccountHasher accountHasher) {
-        this(repository, gateway, accountHasher, Clock.systemUTC());
+            StoreAccountHasher accountHasher,
+            ServerClock clock) {
+        this.repository = repository;
+        this.gateway = gateway;
+        this.accountHasher = accountHasher;
+        this.clock = clock;
     }
 
     SubscriptionService(
@@ -37,10 +42,7 @@ public class SubscriptionService {
             GooglePlaySubscriptionGateway gateway,
             StoreAccountHasher accountHasher,
             Clock clock) {
-        this.repository = repository;
-        this.gateway = gateway;
-        this.accountHasher = accountHasher;
-        this.clock = clock;
+        this(repository, gateway, accountHasher, new ServerClock(clock));
     }
 
     public SubscriptionCatalog catalog(UUID accountId) {
@@ -95,7 +97,7 @@ public class SubscriptionService {
                     "Verified subscription has invalid lifecycle times.");
         }
         SubscriptionVerificationResult completed = repository.complete(
-                accountId, requestId, subscription, Instant.now(clock));
+                accountId, requestId, subscription, clock.now());
         return attempt.replay() ? completed.asReplay() : completed;
     }
 
@@ -126,7 +128,7 @@ public class SubscriptionService {
                     "GOOGLE_PLAY_SUBSCRIPTION_ACCOUNT_MISMATCH",
                     "Verified subscription belongs to another account.");
         }
-        return repository.reconcile(owner, subscription, Instant.now(clock));
+        return repository.reconcile(owner, subscription, clock.now());
     }
 
     private void validate(String productId, String purchaseToken) {

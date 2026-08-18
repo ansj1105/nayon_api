@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nayon.api.economy.EconomyRepository;
 import com.nayon.api.economy.EconomySnapshot;
+import com.nayon.api.time.ServerClock;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -17,14 +18,17 @@ public class JdbcGachaRepository implements GachaRepository {
     private final JdbcTemplate jdbc;
     private final EconomyRepository economyRepository;
     private final ObjectMapper objectMapper;
+    private final ServerClock clock;
 
     public JdbcGachaRepository(
             JdbcTemplate jdbc,
             EconomyRepository economyRepository,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            ServerClock clock) {
         this.jdbc = jdbc;
         this.economyRepository = economyRepository;
         this.objectMapper = objectMapper;
+        this.clock = clock;
     }
 
     @Override
@@ -61,7 +65,7 @@ public class JdbcGachaRepository implements GachaRepository {
         }
 
         UUID drawId = UUID.randomUUID();
-        Instant createdAt = Instant.now();
+        Instant createdAt = clock.now();
         debit(accountId, requestId, drawId, spec);
         GachaPity currentPity = lockPity(accountId, spec.banner());
         GachaEngine.GachaOutcome outcome = engine.draw(spec, currentPity);

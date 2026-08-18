@@ -3,6 +3,7 @@ package com.nayon.api.levelreward;
 import com.nayon.api.progression.AccountLevelCatalog;
 import com.nayon.api.subscription.PlayerSubscription;
 import com.nayon.api.subscription.SubscriptionService;
+import com.nayon.api.time.ServerClock;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,14 +22,18 @@ public class LevelRewardService {
     private final LevelRewardRepository repository;
     private final SubscriptionService subscriptions;
     private final AccountLevelCatalog levels;
-    private final Clock clock;
+    private final ServerClock clock;
 
     @Autowired
     public LevelRewardService(
             LevelRewardRepository repository,
             SubscriptionService subscriptions,
-            AccountLevelCatalog levels) {
-        this(repository, subscriptions, levels, Clock.systemUTC());
+            AccountLevelCatalog levels,
+            ServerClock clock) {
+        this.repository = repository;
+        this.subscriptions = subscriptions;
+        this.levels = levels;
+        this.clock = clock;
     }
 
     LevelRewardService(
@@ -36,14 +41,11 @@ public class LevelRewardService {
             SubscriptionService subscriptions,
             AccountLevelCatalog levels,
             Clock clock) {
-        this.repository = repository;
-        this.subscriptions = subscriptions;
-        this.levels = levels;
-        this.clock = clock;
+        this(repository, subscriptions, levels, new ServerClock(clock));
     }
 
     public LevelRewardList get(UUID accountId) {
-        Instant now = Instant.now(clock);
+        Instant now = clock.now();
         long total = repository.totalAccountExp(accountId);
         int level = levels.level(total);
         List<PlayerSubscription> current = subscriptions.findAll(accountId);
@@ -62,7 +64,7 @@ public class LevelRewardService {
         long total = repository.totalAccountExp(accountId);
         return repository.claim(accountId, requestId,
                 hash(trackCode.name() + "\n" + requiredLevel),
-                trackCode, requiredLevel, levels.level(total), Instant.now(clock));
+                trackCode, requiredLevel, levels.level(total), clock.now());
     }
 
     private String hash(String value) {

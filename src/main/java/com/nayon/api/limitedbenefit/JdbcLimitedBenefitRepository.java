@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nayon.api.economy.EconomyRepository;
 import com.nayon.api.economy.EconomySnapshot;
+import com.nayon.api.time.KstGameTimeCalculator;
 import com.nayon.api.limitedbenefit.admob.AdMobRewardCallbackResult;
 import com.nayon.api.limitedbenefit.admob.AdMobSsvCallback;
 import com.nayon.api.limitedbenefit.admob.LimitedBenefitAdSession;
@@ -145,7 +146,7 @@ public class JdbcLimitedBenefitRepository {
                     "Economy must be bootstrapped before claiming rewards.");
         }
         Instant resetsAt = cycleDate.plusDays(1)
-                .atStartOfDay(LimitedBenefitService.CAMPAIGN_ZONE).toInstant();
+                .atStartOfDay(KstGameTimeCalculator.KST).toInstant();
         LimitedBenefitCampaign campaign = findCurrent(accountId, now, cycleDate, resetsAt)
                 .orElseThrow(() -> conflict("LIMITED_BENEFIT_NOT_ACTIVE",
                         "No limited benefit campaign is active."));
@@ -219,7 +220,7 @@ public class JdbcLimitedBenefitRepository {
                  where account_id = ? and status = 'PENDING' and expires_at <= ?
                 """, accountId, Timestamp.from(now));
         Instant resetsAt = cycleDate.plusDays(1)
-                .atStartOfDay(LimitedBenefitService.CAMPAIGN_ZONE).toInstant();
+                .atStartOfDay(KstGameTimeCalculator.KST).toInstant();
         LimitedBenefitCampaign campaign = findCurrent(accountId, now, cycleDate, resetsAt)
                 .orElseThrow(() -> conflict("LIMITED_BENEFIT_NOT_ACTIVE",
                         "No limited benefit campaign is active."));
@@ -404,9 +405,9 @@ public class JdbcLimitedBenefitRepository {
         }
         GoogleReceiptProof proof = rows.getFirst();
         Instant cycleStart = cycleDate.atStartOfDay(
-                LimitedBenefitService.CAMPAIGN_ZONE).toInstant();
+                KstGameTimeCalculator.KST).toInstant();
         Instant cycleEnd = cycleDate.plusDays(1).atStartOfDay(
-                LimitedBenefitService.CAMPAIGN_ZONE).toInstant();
+                KstGameTimeCalculator.KST).toInstant();
         if (!proof.accountId().equals(accountId)
                 || !proof.state().equals("GRANTED")
                 || !proof.fulfillmentType().equals("LIMITED_BENEFIT")

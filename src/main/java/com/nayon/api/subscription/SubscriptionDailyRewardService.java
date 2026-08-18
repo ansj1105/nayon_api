@@ -1,15 +1,13 @@
 package com.nayon.api.subscription;
 
+import com.nayon.api.time.KstGameTimeCalculator;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.HexFormat;
 import java.util.UUID;
 
@@ -17,25 +15,21 @@ import java.util.UUID;
 public class SubscriptionDailyRewardService {
 
     private final SubscriptionRewardRepository repository;
-    private final Clock clock;
+    private final KstGameTimeCalculator time;
 
-    @Autowired
-    public SubscriptionDailyRewardService(SubscriptionRewardRepository repository) {
-        this(repository, Clock.systemUTC());
-    }
-
-    SubscriptionDailyRewardService(
-            SubscriptionRewardRepository repository, Clock clock) {
+    public SubscriptionDailyRewardService(
+            SubscriptionRewardRepository repository,
+            KstGameTimeCalculator time) {
         this.repository = repository;
-        this.clock = clock;
+        this.time = time;
     }
 
     public SubscriptionDailyRewardResult claim(
             UUID accountId,
             UUID requestId,
             SubscriptionPlanCode planCode) {
-        Instant now = Instant.now(clock);
-        LocalDate date = LocalDate.ofInstant(now, ZoneOffset.UTC);
+        Instant now = time.now().toInstant();
+        LocalDate date = time.dailyPeriod().periodKey();
         return repository.claimDaily(
                 accountId, requestId, hash(planCode.name() + "\n" + date),
                 planCode, date, now);
